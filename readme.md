@@ -14,9 +14,7 @@ BonBon is an app that runs on MacOs, Linux and soon on Windows and older version
 
 ### How to
 
-To get started, get the app on from our Install page. 
-
-Check out this page for ideas for how to explore BonBon. 
+To get started, get the app on from the [Download page](download.md). 
 
 ### Docs
 
