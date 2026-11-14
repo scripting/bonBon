@@ -1,6 +1,6 @@
 # BonBon
 
-BonBon is the first browser for the Markdown web.
+Writing is so important it deserves its own web.
 
 ### Who?
 
@@ -10,7 +10,9 @@ This doc, and all other docs on this site were written by humans, unless otherwi
 
 ### What is BonBon?
 
-BonBon is an app that runs on MacOs, Linux and soon on Windows and older versions of the Mac. 
+BonBon is the first browser for the Markdown web.
+
+It's an app that runs on MacOs and Linux. 
 
 ### How to
 
