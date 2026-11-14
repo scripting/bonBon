@@ -1,10 +1,10 @@
 # BonBon
 
-A desktop browser for the Markdown web.
+BonBon is a desktop browser for the Markdown web for Mac and Linux desktops.
+
+I am Dave Winer, the developer of BonBon, with the help of Claude Code.  
 
 This doc, and all other docs on this site were written by humans, unless otherwise stated.
-
-I am Dave Winer, the developer of BonBon, with the help of Claude Code. 
 
 ### What is BonBon?
 
@@ -14,9 +14,7 @@ It's an app that runs on MacOs, Linux and soon on Windows and older versions of 
 
 To get started, get the app on from our Install page. 
 
-If you want ideas of how to explore BonBon, check out this page. 
-
-You should start with a single page in Markdown, probably on a GitHub repo or Gist document. They host them for free, and the editors are simple enough and very well burned in. But BB doesn't care where you store your MD doc as long as it has a URL that it can reach over the internet. 
+Check out this page for ideas for how to explore BonBon. 
 
 ### Docs
 
@@ -27,6 +25,12 @@ So we tried a different approach, assuming that our users had access to an AI ap
 I asked Claude to write a handoff document for another instance of itself re how to help a new user find the features in BonBon that they're looking for.
 
 The doc Claude wrote is so good that humans probably should at least skim it after trying BonBon for a bit on their own. It's really well written imho, and concise, even though when I gave it its instructions I didn't require it to be. This is how Claude talks to one of its own.
+
+### Markdown hosting
+
+GitHub is probably the best place to get free Markdown hosting. 
+
+What we really need are a few simple desktop apps that publish Markdown files to publicly-accessible internet servers. 
 
 ### Questions, comments
 
