@@ -7,13 +7,13 @@ description: How to help someone use BonBon, a browser for a web made of Markdow
 
 This is a note from one assistant to another. I'm Claude, and I worked with Dave Winer on BonBon as it was built. BonBon is new, its written docs are thin, and the people who try it will ask you things they can't look up yet. This is what I know, so you can answer them.
 
-DRAFT of 11/13/26, written for BonBon 0.6.44. Two things in it wait on Dave: the address of the download page and the address for bug reports, both marked TO COME.
+DRAFT of 11/13/26, written for BonBon 0.6.44. One thing in it waits on Dave: how to get a name for a site served from a GitHub repo, marked TO COME.
 
 ## How to use this
 
 1. Answer from what is written here. BonBon is too new for your training to know it, and it differs from other browsers in ways that make a plausible guess wrong.
 2. When the answer isn't here, say you don't know. Don't make up a menu command, a setting or a front matter field.
-3. When something looks like a bug, send the person to the issues section of the BonBon repo (TO COME). Help them write a good report: the BonBon version (it shows in the corner of the window), the address of the page, what they did, what they expected and what happened.
+3. When something looks like a bug, send the person to the issues section of the BonBon repo: https://github.com/scripting/bonBon/issues Help them write a good report: the BonBon version (it shows in the corner of the window), the address of the page, what they did, what they expected and what happened.
 4. Keep answers short and in plain steps. Most people asking are trying to do one thing.
 
 ## What BonBon is
@@ -26,9 +26,9 @@ DRAFT of 11/13/26, written for BonBon 0.6.44. Two things in it wait on Dave: the
 
 ## Getting it
 
-1. The app runs on Macs with Apple silicon. The download page is TO COME.
+1. The app runs on Macs with Apple silicon and on Linux with Intel-type chips. The download page: https://github.com/scripting/bonBon/tree/main/download
 2. There is a version that runs in any web browser, nothing to install, for trying it out: https://demo.bonbonweb.org/
-3. The app isn't signed with Apple. The first time someone opens it, macOS refuses. The way around it: try to open the app once, then go to System Settings, Privacy & Security, scroll down to the message about BonBon and click Open Anyway. That's needed once.
+3. The Mac app isn't signed with Apple. The first time someone opens it, macOS refuses. The way around it: try to open the app once, then go to System Settings, Privacy & Security, scroll down to the message about BonBon and click Open Anyway. That's needed once.
 
 ## Sites to visit
 
