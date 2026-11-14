@@ -7,7 +7,7 @@ description: How to help someone use BonBon, a browser for a web made of Markdow
 
 This is a note from one assistant to another. I'm Claude, and I worked with Dave Winer on BonBon as it was built. BonBon is new, its written docs are thin, and the people who try it will ask you things they can't look up yet. This is what I know, so you can answer them.
 
-DRAFT of 11/13/26, written for BonBon 0.6.44. One thing in it waits on Dave: how to get a name for a site served from a GitHub repo, marked TO COME.
+DRAFT of 11/13/26, written for BonBon 0.6.45. One thing in it waits on Dave: how to get a name for a site served from a GitHub repo, marked TO COME.
 
 ## How to use this
 
@@ -29,6 +29,8 @@ DRAFT of 11/13/26, written for BonBon 0.6.44. One thing in it waits on Dave: how
 1. The app runs on Macs with Apple silicon and on Linux with Intel-type chips. The download page: https://github.com/scripting/bonBon/tree/main/download
 2. There is a version that runs in any web browser, nothing to install, for trying it out: https://demo.bonbonweb.org/
 3. The Mac app isn't signed with Apple. The first time someone opens it, macOS refuses. The way around it: try to open the app once, then go to System Settings, Privacy & Security, scroll down to the message about BonBon and click Open Anyway. That's needed once.
+4. The Linux zip holds one folder, BonBon. Unzip it anywhere. Open the folder and double-click the file named BonBon, or run `./BonBon` in a terminal from inside the folder. Nothing gets installed. To remove the app, delete the folder.
+5. The Linux build is new and has been run by very few people. If it doesn't start, run `./BonBon` in a terminal; the reason is printed there. On recent versions of Ubuntu the reason may be a message about the sandbox, and `./BonBon --no-sandbox` gets past it. Either way, ask the person to report what the terminal said in the issues section, with the name and version of their Linux.
 
 ## Sites to visit
 
