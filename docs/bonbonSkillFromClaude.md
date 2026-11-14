@@ -64,7 +64,7 @@ The menus:
 
 What happens with things that aren't Markdown:
 
-1. A click on a link to an HTML page opens it in your regular browser. BonBon stays where it was.
+1. A click on a link to an HTML page opens it in your historic browser, meaning Chrome, Safari or whichever browser you use for the HTML web. BonBon stays where it was.
 2. An HTML address you type yourself shows the page's source, as text.
 3. XML, OPML, JSON and source code (JavaScript, CSS, Python and many others) are shown as text, in color.
 4. A picture is shown by itself, centered.
