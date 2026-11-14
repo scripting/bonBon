@@ -18,9 +18,11 @@ To get started, get the app on from the [Download page](download.md).
 
 ### Docs
 
+
+
 We've started writing docs and didn't like anything we produced . 
 
-So we tried a different approach, assuming that our users had access to an AI app like Claude or ChatGPT. 
+So we tried a different approach, assuming that users had access to an AI app like Claude or ChatGPT. 
 
 I asked Claude to write a handoff document for another instance of itself re how to help a new user find the features in BonBon that they're looking for.
 
