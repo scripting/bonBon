@@ -14,7 +14,7 @@ Caveat: If we add more files to this folder, unless otherwise stated, will be wr
 
 ### Basic AI skill doc
 
-This is the [handoff doc](bonbonSkillFromClaude.md) I asked the Claude project that's managing this app to write it for other AI apps, but it's also will be useful to humans 
+This is the [handoff doc](bonbonSkillFromClaude.md) I asked  Claude to write it for other AI apps, but it's also will be useful to humans 
 
 ### 
 
