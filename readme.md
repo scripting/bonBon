@@ -2,17 +2,17 @@
 
 <i>Writing is so important it deserves its own web.</i>
 
-### Who?
-
-I am Dave Winer, the developer of BonBon, with the help of Claude Code.  
-
-This doc, and all other docs on this site were written by humans, unless otherwise stated.
-
 ### What is BonBon?
 
 BonBon is the first browser for the Markdown web.
 
 It's an app that runs on MacOs and Linux. 
+
+### Who
+
+I am Dave Winer, the developer of BonBon, with the help of Claude Code.  
+
+This doc, and all other docs on this site were written by humans, unless otherwise stated.
 
 ### How to
 
