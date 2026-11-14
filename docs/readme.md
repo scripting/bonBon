@@ -2,7 +2,7 @@
 
 ### Background
 
-Claude and I started writing docs and didn't like anything we produced, and it was very slow going, but I was decided to write the docs myself because I had delegated it to Claude for an earlier project and found the docs were so verbose and technical that I felt they were ineffective.  
+Claude and I started writing docs and didn't like anything we produced, and it was very slow going, but I decided to write the docs myself because I had delegated it to Claude for an earlier project and found the docs were so verbose and technical that I felt they were ineffective.  
 
 So we tried a different approach with BonBon. We assumed that users had access to an AI app like Claude or ChatGPT. 
 
@@ -14,7 +14,7 @@ Caveat: If we add more files to this folder, unless otherwise stated, will be wr
 
 ### Basic AI skill doc
 
-This is the [handoff doc](bonbonSkillFromClaude.md) I asked  Claude to write it for other AI apps, but it's also will be useful to humans 
+This is the [handoff doc](bonbonSkillFromClaude.md) that I asked  Claude to write it for other AI apps, but it also will be useful to humans 
 
 ### 
 
