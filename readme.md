@@ -1,6 +1,6 @@
 # BonBon
 
-Writing is so important it deserves its own web.
+<i>Writing is so important it deserves its own web.</i>
 
 ### Who?
 
@@ -27,6 +27,10 @@ Docs are in the [Docs folder](docs).
 GitHub is probably the best place to get free Markdown hosting. 
 
 What we really need are a few simple desktop apps that publish Markdown files to publicly-accessible internet servers. 
+
+### Open source
+
+BonBon will be released in open source as soon as things settle down.
 
 ### Questions, comments
 
