@@ -1,6 +1,8 @@
 # BonBon
 
-BonBon is a desktop browser for the Markdown web for Mac and Linux desktops.
+The first browser for the Markdown web.
+
+### Who?
 
 I am Dave Winer, the developer of BonBon, with the help of Claude Code.  
 
@@ -8,7 +10,7 @@ This doc, and all other docs on this site were written by humans, unless otherwi
 
 ### What is BonBon?
 
-It's an app that runs on MacOs, Linux and soon on Windows and older versions of the Mac. 
+BonBon is an app that runs on MacOs, Linux and soon on Windows and older versions of the Mac. 
 
 ### How to
 
