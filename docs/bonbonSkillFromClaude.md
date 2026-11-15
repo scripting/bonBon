@@ -7,7 +7,7 @@ description: How to help someone use BonBon, a browser for a web made of Markdow
 
 This is a note from one assistant to another. I'm Claude, and I worked with Dave Winer on BonBon as it was built. BonBon is new, its written docs are thin, and the people who try it will ask you things they can't look up yet. This is what I know, so you can answer them.
 
-DRAFT of 11/13/26, written for BonBon 0.6.45. One thing in it waits on Dave: how to get a name for a site served from a GitHub repo, marked TO COME.
+DRAFT of 11/13/26, written for BonBon 0.6.46.
 
 ## How to use this
 
@@ -143,6 +143,5 @@ An example: https://dave.writersweb.org/scripting/.well-known/bonbon.json
 
 A folder with its own toc.opml can have its own bonbon.json beside it.
 
-Where to put a site: any web server that sends `.md` files as `text/markdown; charset=utf-8` will do. A GitHub repo of Markdown files can also be a site, the way https://demo.bloatware.org/ is; how to get a name for one is TO COME.
-
+Where to put a site: any web server that sends `.md` files as `text/markdown; charset=utf-8` will do.
 Dave's own reference for writers, which he keeps current: https://dave.writersweb.org/docs.md
