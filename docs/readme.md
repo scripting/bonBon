@@ -16,3 +16,7 @@ Caveat: If we add more files to this folder, unless otherwise stated, will be wr
 
 This is the [handoff doc](bonbonSkillFromClaude.md) that I asked  Claude to write it for other AI apps, but it also will be useful to humans 
 
+### Hello world
+
+How to [create](helloworld.md) a Markdown page and view it in BonBon.
+
