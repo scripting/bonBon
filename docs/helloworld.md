@@ -6,7 +6,7 @@ A few short steps to create a Markdown file for viewing in BonBon.
 
 * Enter some text. Use Markdown code if you like. 
 
-* In the bottom right corner of the window, choose Create public gist. [Screen shot](https://imgs.scripting.com/2026/11/16/gistEditorScreenshot.png). 
+* In the bottom right [corner](https://imgs.scripting.com/2026/11/16/gistEditorScreenshot.png) of the window, choose Create public gist.
 
 * Click the button. A new page displays showing a rendering of your markdown, still within GitHub. 
 
