@@ -1,3 +1,9 @@
+# Charter
+
+When we began work on mdBrowser which eventually became BonBon I had a conversation with Claude over a few days to establish a charter for the project because while it is a web browser, it's quite different from the browsers that grew out of the invention of the web by Tim Berners-Lee. As we went along, Claude added to the list. 
+
+So while this was a collaborative effort, the remaining text on this page was written by Claude. One of our principles is that text you read here is human written unless otherwise stated. 
+
 ### What it is
 
 A browser for a web made of Markdown files. It is a pure reading environment: the writer's words, with nothing between them and the reader.
