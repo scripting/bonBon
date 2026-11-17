@@ -16,5 +16,5 @@ A few short steps to create a Markdown file for viewing in BonBon.
 
 You can put the Markdown file anywhere as long as you have a public web address for it. From there you can build structures of Markdown files, to form a web site. 
 
-You may want to edit the URL that GitHub gives you when you click on the Raw link, so that it continues to reflect any edits you make to the document. To do so, take the long string of letters and numbers out of the raw URL. It always gives the current version. Applying this method to the URL returned in step 4, it would become [this](https://gist.githubusercontent.com/scripting/hello.md) much shorter url. 
+You may want to edit the URL that GitHub gives you, in step 4, when you click on the Raw link, so that it continues to reflect any edits you make to the document. To do so, take the long string of letters and numbers out of the raw URL. It always gives the current version. Applying this method to the URL returned in step 4, it would become [this](https://gist.githubusercontent.com/scripting/hello.md) much shorter url. 
 
