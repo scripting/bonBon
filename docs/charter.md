@@ -8,6 +8,8 @@ As we went along, Claude added to the list.
 
 So while this was a collaborative effort, the remaining text on this page was written by Claude. One of our principles is that text you read here is human written unless otherwise stated. 
 
+Dave Winer, November 2026
+
 ### What it is
 
 A browser for a web made of Markdown files. It is a pure reading environment: the writer's words, with nothing between them and the reader.
