@@ -28,10 +28,6 @@ GitHub is probably the best place to get free Markdown hosting.
 
 What we really need are a few simple desktop apps that publish Markdown files to publicly-accessible internet servers. 
 
-### Open source
-
-BonBon will be released in open source as soon as things settle down.
-
 ### Questions, comments
 
 We're using the [issues section](https://github.com/scripting/bonBon/issues) of the GitHub repository for support. 
