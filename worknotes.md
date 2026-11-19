@@ -1,3 +1,13 @@
+#### 11/19/26; 2:48:53 PM by DW
+
+The Mac app has its icon back, the Black Lab, which 0.6.52 and 0.6.53 shipped without. It's back in 0.6.54. 
+
+A bon:// link is a link that opens in BonBon. Click one in Chrome, in email, anywhere on the Mac, and BonBon comes to the front showing that page. Example below. 
+
+* bon://dave.writersweb.org/worknotes.md
+
+The startup script calls hitCounter function. 
+
 #### 11/18/26; 5:16:23 PM by DW -- v0.6.53
 
 A page that a server sends zipped now shows as a normal page.
