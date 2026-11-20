@@ -1,3 +1,9 @@
+#### 11/19/26; 6:57:03 PM by DW
+
+I think people could use an example blog with all files in Markdown instead of HTML. 
+
+We're going to do a bunch of these, here we start off with Scripting News, going back to 2017.
+
 #### 11/19/26; 2:48:53 PM by DW
 
 The Mac app has its icon back, the Black Lab, which 0.6.52 and 0.6.53 shipped without. It's back in 0.6.54. 
