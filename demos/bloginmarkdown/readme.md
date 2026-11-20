@@ -1,6 +1,6 @@
 # Scripting News as a markdown blog
 
-We started with the OPML archive in the Scripting-News GitHub repo, and then keep it current with the RSS 2.0 feed. 
+We started with the [OPML archive](https://github.com/scripting/Scripting-News/tree/master/blog/opml) in the Scripting-News GitHub repo, and then keep it current with the RSS 2.0 feed. 
 
 We also use front matter, and are compatible with the major static site generators, and macros. 
 
