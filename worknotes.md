@@ -1,3 +1,15 @@
+#### 11/20/26; 8:32:16 AM by DW
+
+We should have an RSS 2.0 feed for updates, but for now this worknotes.md file will have to do. I will try to keep it current. 
+
+Version 0.6.55 is released. 
+
+Files ending with .js or .json are rendered as listings. 
+
+Main feature -- this is the first release where we have released the JavaScript code for the Electron app.  
+
+We're using the MIT License. I want there to be quick growth in the Markdown web, and this is a way to drive it. We will keep moving the app forward, lots of plans for things to do here, and at least one of them will come out in the next few days. I am serious about doing for text what we did for talk radio with podcasting. And we're looking for people to fill in the blank areas, we could use some serious Markdown editors with storage, designed for publishing apps. 
+
 #### 11/19/26; 6:57:03 PM by DW
 
 As part of getting BonBon ready for the world, we converted a few websites from HTML to Markdown. 
@@ -6,7 +18,7 @@ Not just the files, but the structures -- the home page, the monthly archive, da
 
 I'm seeing people start to experiment with making their own sites. I want to show them how we did it with Scripting News.
 
-This is [where you go](https://github.com/scripting/bonBon/blob/main/demos/bloginmarkdown/readme.md). 
+#### This is [where you go](https://github.com/scripting/bonBon/blob/main/demos/bloginmarkdown/readme.md). 
 
 #### 11/19/26; 2:48:53 PM by DW
 
