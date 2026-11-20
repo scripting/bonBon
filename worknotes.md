@@ -6,6 +6,8 @@ Version 0.6.55 is released.
 
 Files ending with .js or .json are rendered as listings. 
 
+New [demo](https://github.com/scripting/bonBon/blob/main/demos/bloginmarkdown/readme.md) with the Markdown source for the Scripting News in Markdown website, a snapshot from yesterday. Should provide a decent example for developers trying to convert the output of a CMS from HTML to Markdown.  
+
 Main feature -- this is the first release where we have released the JavaScript code for the Electron app.  
 
 We're using the MIT License. I want there to be quick growth in the Markdown web, and this is a way to drive it. We will keep moving the app forward, lots of plans for things to do here, and at least one of them will come out in the next few days. I am serious about doing for text what we did for talk radio with podcasting. And we're looking for people to fill in the blank areas, we could use some serious Markdown editors with storage, designed for publishing apps. 
