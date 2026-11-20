@@ -1,0 +1,942 @@
+body { /* 10/13/26 by CC -- the dialogs get this. Dave uses Ubuntu for dialogs in all his software. 10/27/26: the page itself is styled by the stylesheet the reader chose, linked after this file; it sets the body too */
+	margin: 0;
+	font-family: Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.4;
+	color: #222;
+	background-color: white;
+	}
+
+.btn, .modal, .modal input, .modal textarea {
+	font-family: Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	}
+
+.divChrome {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background-color: #f0f0f0;
+	border-bottom: 1px solid #ccc;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	z-index: 10; /* 10/17/26 by CC -- above the page column, which is positioned (for the arrows) and painted over the chrome when scrolled; the reload icon looked dead */
+	}
+
+.divAddressBar {
+	display: flex;
+	align-items: center;
+	justify-content: center; /* 11/14/26 by CC -- the address box in the middle with the buttons at its sides, the demo's arrangement; see .divAddressField */
+	padding: 22px 24px 6px 24px; /* (11/16/26: the top is Dave's number too, 22, from his own stylesheet; it was 14) */ /* (the bottom is Dave's number, 11/14, worked out in his own stylesheet: "i want to shorten the distance betw the bottom of the box to the top of the bookmarks"; it was 12) */ /* 11/12/26 by CC -- opened up (Dave: "the arrangement on the app feels very crowded"): more room above the row, and the same room at both edges of the window, since "every change you make on the right applies to the left too"; more room below the row too, above the bookmarks (at first it went below them: "i put the extra space in the wrong part") */
+	}
+
+.divNavButtons {
+	display: flex;
+	gap: 20px; /* 11/12/26: between the buttons at the left, the same as between the icons at the right */
+	margin-right: 16px; /* 11/12/26: between the buttons and the address bar; Dave's number, worked out in his own stylesheet (36 at first, then 24) */
+	font-size: 20px; /* 11/16/26 by CC -- bigger icons, Dave's number, tried in his own stylesheet (to-do 54: "i'd like the icons to be bigger"); it was 16 */
+	color: #444;
+	}
+
+.divNavButtons i {
+	cursor: pointer;
+	}
+
+.divNavButtons i.disabled {
+	color: #bbb;
+	cursor: default;
+	}
+
+.divAddressField { /* 10/12/26 by CC -- the field is the icon and the text together, one box */
+	position: relative; /* 10/18/26: the typeahead hangs under it */
+	flex: 0 1 520px; /* 11/14/26 by CC -- as narrow as the demo's, the demo's own number; it was flex: 1, edge to edge. Dave: "look at how much more narrow the address bar is. i don't see why we need any more than that in the desktop app"; a long address scrolls inside the box. He tried it, 11/14, and kept it */
+	display: flex;
+	align-items: center;
+	background-color: white;
+	border: 1px solid #bbb;
+	border-radius: 6px;
+	}
+
+.divAddressField:focus-within {
+	border-color: #4a90d9;
+	}
+
+.spanAddressFavicon {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	margin: 0 2px 0 8px;
+	font-size: 14px;
+	color: #777;
+	cursor: grab;
+	}
+
+.spanAddressFavicon img {
+	width: 16px;
+	height: 16px;
+	}
+
+.divAddressBar .inputAddress { /* two classes, so these beat bootstrap's input[type="text"] rule, which outweighs a lone class */
+	flex: 1;
+	box-sizing: border-box;
+	height: auto;
+	margin: 0;
+	padding: 6px 10px 6px 6px;
+	font-size: 15px;
+	line-height: normal;
+	font-family: inherit;
+	color: #222;
+	background-color: transparent;
+	border: none;
+	border-radius: 6px;
+	box-shadow: none;
+	outline: none;
+	}
+
+.divAddressBar .inputAddress:focus {
+	box-shadow: none;
+	}
+
+/*  10/12/26 by CC -- the tab strip is the title bar, Chrome's layout. The
+	window's own title bar is hidden; the strip is the draggable part of the
+	window, the tabs and the plus button are not, so they still take clicks.
+	The left padding leaves room for the Mac's traffic lights.  */
+
+.divTabBar {
+	display: flex;
+	align-items: flex-end;
+	height: 38px;
+	padding: 0 12px 0 80px;
+	box-sizing: border-box;
+	background-color: #dcdfe3;
+	-webkit-app-region: drag;
+	}
+
+.divTabs {
+	display: flex;
+	gap: 2px;
+	min-width: 0;
+	overflow: hidden; /* 10/16/26 by CC -- the tabs shrink to fit, Chrome's way; a scrollbar here clipped the titles */
+	-webkit-app-region: no-drag;
+	}
+
+.divTab {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 0 1 220px;
+	min-width: 0;
+	max-width: 220px;
+	padding: 7px 12px;
+	font-size: 13px;
+	color: #444;
+	border-radius: 8px 8px 0 0;
+	cursor: pointer;
+	user-select: none;
+	-webkit-app-region: no-drag;
+	}
+
+.divTab:hover {
+	background-color: #e8eaed;
+	}
+
+.divTab.dropTarget { /* 10/12/26 by CC -- something is being dragged over this tab */
+	box-shadow: inset 0 0 0 2px #4a90d9;
+	}
+
+.divTabBar.dropTarget {
+	box-shadow: inset 0 -3px 0 #4a90d9;
+	}
+
+.divTab .imgTabFavicon, .divTab .iTabFavicon { /* 10/12/26 by CC -- the site's icon at the left of the title, as in Chrome */
+	flex: none;
+	width: 16px;
+	height: 16px;
+	}
+
+.divTab .iTabFavicon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	color: #888;
+	}
+
+.divTab.current {
+	color: #222;
+	background-color: #f0f0f0;
+	}
+
+/*  10/12/26 by CC -- not a bug, but a trap: bootstrap has a rule for every
+	class whose name contains "span" (its grid columns), floating it left
+	with a 20px left margin. Any class named spanXxx needs these three
+	lines to undo it.  */
+
+.spanTabTitle {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	}
+
+.spanTabClose {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	color: #999;
+	font-size: 12px;
+	}
+
+.spanTabClose:hover {
+	color: #222;
+	}
+
+.buttonNewTab {
+	padding: 9px 10px;
+	font-size: 13px;
+	color: #444;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+	}
+
+.spanVersion { /* 10/13/26 by CC -- the version in the corner; the first three lines undo bootstrap's span rule */
+	float: none;
+	margin-left: auto;
+	min-height: 0;
+	flex: none;
+	padding: 0 2px 10px 12px;
+	font-size: 12px;
+	color: #888;
+	user-select: none;
+	}
+
+/*  10/12/26 by CC -- the page's own look. Bootstrap, which the bookmarks
+	dialog needs, styles every tag on the page; these put the page back the
+	way it was before it arrived.
+	
+	10/27/26 by CC -- the look of the page now comes from the stylesheet the
+	reader chose (see STYLESHEETS in index.js), linked after this file. The
+	Georgia rules that were here are gone; what stays is structural. The
+	bootstrap undoing is written with :where (), which has the specificity of
+	a bare tag, so it beats bootstrap by coming later and the stylesheet beats
+	it the same way. It only sets what bootstrap sets and the stylesheets
+	don't: a bordered hr, 20px list items, pink code.  */
+
+:root {
+	--calendarGap: 40px; /* 10/17/26 by CC -- the space between the text and the calendar; the user's CSS can set it */
+	}
+.divPageArea { /* 10/17/26 by CC -- a row: the column, then the calendar when there is one. Without a calendar the column centers itself (Dave: "absolutely center the text, that keeps it simple"); with one, the text sits at the left and the calendar beside it, at the gap */
+	display: flex;
+	align-items: flex-start;
+	}
+.divPageColumn { /* 10/16/26 by CC -- the column holds the width; the header and the page fill it. 10/27/26: the width and margins moved to .page inside it, the stylesheet's; this only keeps the page below the chrome */
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	padding-top: var(--chromeHeight, 115px); /* --chromeHeight is set at startup from the chrome's height; the user's CSS can override this rule */
+	box-sizing: border-box;
+	}
+body.sidebarShowing .page {
+	margin: 0;
+	}
+
+:where(.divPage) h4, :where(.divPage) h5, :where(.divPage) h6 { /* the stylesheets style h1 to h3; without this bootstrap sizes the rest */
+	margin: 1em 0 0.5em 0;
+	font-size: 1em;
+	line-height: inherit;
+	}
+:where(.divPage) a:hover, :where(.divPage) a:focus {
+	color: var(--link, -webkit-link);
+	}
+:where(.divPage) li {
+	line-height: inherit;
+	}
+:where(.divPage) hr {
+	border: 0;
+	}
+:where(.divPage) img {
+	vertical-align: baseline;
+	border: 0;
+	}
+
+.divBookmarksMenuHolder {
+	display: none;
+	}
+
+/*  10/13/26 by CC -- the bookmarks bar, under the address bar. Each item is
+	the site's icon and a short name; the names are edited in the outline,
+	Edit Bookmarks..., under the "Bookmarks bar" headline.  */
+
+.divBookmarksBar {
+	display: flex;
+	align-items: center;
+	justify-content: center; /* 11/14/26 by CC -- the bookmarks centered under the address box; this and the three changes below are Dave's rules, worked out in his own stylesheet, "everyone gets them" */
+	gap: 2px;
+	min-height: 24px;
+	padding: 0 17px 12px 17px; /* (11/16/26: the bottom is 12 now, Dave's number from his own stylesheet; it was 6) */ /* (the bottom is Dave's number, 11/14: the pixels taken from under the address box go here, below the bookmarks; it was 0, and 5 before that) */ /* 11/12/26: the sides line the first bookmark's icon up with the Back button (an item has 7 of its own); the bottom is what it was, the extra room went above this row instead, see .divAddressBar */
+	overflow: hidden;
+	font-size: 12px;
+	color: dimgray; /* 11/14/26: Dave's, a quieter gray; it was #333 */
+	}
+
+.divBookmarksBar.hidden {
+	display: none;
+	}
+
+.divBookmarksBar.dropTarget {
+	box-shadow: inset 0 0 0 2px #4a90d9;
+	}
+
+.aBookmarksBarItem {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 7px;
+	border-radius: 4px;
+	color: inherit;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+	}
+
+.aBookmarksBarItem:hover {
+	background-color: #e0e0e0;
+	color: inherit;
+	text-decoration: none;
+	}
+
+.spanBookmarksBarItemTitle { /* a long name is cut short with an ellipsis, as in Chrome; the first three lines undo bootstrap's span rule */
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	max-width: 150px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	}
+
+.aBookmarksBarItem img, .aBookmarksBarItem i {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	}
+
+.aBookmarksBarItem img { /* 11/14/26 by CC -- a site's icon on the bar is a flat shape in the gray of the names beside it (Dave, who tried the grays by name and "went with dimgray"); brightness(0) makes the picture black and invert(41%) lifts black to dimgray */
+	filter: brightness(0) invert(41%);
+	}
+
+.aBookmarksBarItem i {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	color: dimgray; /* 11/14/26: Dave's; it was #888 */
+	}
+
+.divPage .preSource { /* 10/13/26 by CC -- View Source: the page's text as it came from the server. 10/27/26: also an HTML or XML file a link led to; then the body has sourceShowing and the text runs the width of the window from the upper left, the way browsers show an XML file (Dave), in the stylesheet's code font and colors, nothing else */
+	margin: 0;
+	padding: 0;
+	background-color: transparent;
+	border: 0;
+	font-family: var(--font-code, Menlo, Monaco, monospace);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--fg, #222);
+	white-space: pre-wrap;
+	word-break: break-word;
+	}
+body.sourceShowing .page, body.imageShowing .page { /* the stylesheet's column gives way: the whole window */
+	max-width: none;
+	margin: 0;
+	padding: 0;
+	}
+body.sourceShowing .divPage {
+	padding: 12px 16px 40px 16px;
+	}
+body.sourceShowing .preSource { /* 10/30/26 by CC -- source doesn't wrap, it scrolls sideways (Dave: "i'd rather have it not wrap the way it does, rather introduce a horiz scrollbar"); the colors are highlight.js's github theme over the stylesheet's code font */
+	white-space: pre;
+	word-break: normal;
+	overflow-x: auto;
+	}
+.divPage .preSource .codeSource {
+	display: block;
+	padding: 0;
+	background-color: transparent;
+	color: inherit;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	white-space: inherit;
+	}
+body.sourceShowing .divPageHeader, body.imageShowing .divPageHeader { /* 11/10/26 by CC -- it was hidden; a listing or a picture that's a line in the site's table of contents has the arrows in it, at the right edge of the window. Empty, it's hidden like any empty header */
+	margin: 0;
+	padding: 4px 16px 0 16px;
+	}
+.divPageDownload { /* 11/10/26 by CC -- the page for a file that isn't a page, a picture or text: an icon, the file's name, a link that downloads it and its size */
+	text-align: center;
+	padding-top: 80px;
+	}
+.divPageDownload i {
+	font-size: 64px;
+	color: #999;
+	margin-bottom: 24px;
+	}
+.divImageView { /* 10/27/26 by CC -- a picture a link led to, Chrome's way: alone, centered in the window below the chrome, at its own size, shrunk to fit when it's bigger (Dave) */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: calc(100vh - var(--chromeHeight, 115px));
+	padding: 16px;
+	box-sizing: border-box;
+	}
+.divImageView .imgView {
+	max-width: 100%;
+	max-height: calc(100vh - var(--chromeHeight, 115px) - 32px);
+	width: auto;
+	height: auto;
+	border-radius: 0;
+	border: 0;
+	}
+
+/*  10/12/26 by CC -- the find bar. Hidden until Cmd-F; its top is set at
+	startup, just under the chrome, the way the page's top is.  */
+
+.divFindBar {
+	display: none;
+	position: fixed;
+	top: var(--chromeHeight, 90px); /* set at startup from the chrome's height */
+	right: 24px;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	color: #444;
+	background-color: white;
+	border: 1px solid #ccc;
+	border-top: none;
+	border-radius: 0 0 8px 8px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+	}
+
+.divFindBar.showing {
+	display: flex;
+	}
+
+.divFindBar .inputFind {
+	width: 220px;
+	height: auto;
+	margin: 0;
+	padding: 4px 8px;
+	font-size: 14px;
+	line-height: normal;
+	font-family: inherit;
+	color: #222;
+	border: 1px solid #bbb;
+	border-radius: 4px;
+	box-shadow: none;
+	outline: none;
+	}
+
+.divFindBar .inputFind:focus {
+	border-color: #4a90d9;
+	box-shadow: none;
+	}
+
+.spanFindCount {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	min-width: 36px;
+	text-align: center;
+	color: #777;
+	}
+
+.divFindBar i {
+	cursor: pointer;
+	}
+
+.divPage mark.markFind { /* a match; the current one is orange, the others yellow, Chrome's colors */
+	padding: 0;
+	color: inherit;
+	background-color: #ffff00;
+	}
+
+.divPage mark.markFind.current {
+	background-color: #ff9632;
+	}
+
+/* 11/12/26 by CC -- a captioned picture, oldschool's inlineImage: its elements, its class names and its styles, copied from the template's CSS (1/3/20 by DW); see captionImages. The margin is ours, the room a picture had here. It was a pImageOnly paragraph and a divImageCaption */
+.divPage .divInlineImage {
+	margin: 1.5em 0;
+	padding: 10px;
+	padding-left: 15px;
+	padding-right: 15px;
+	border: 1px dashed silver;
+	font-size: 0.8em;
+	line-height: 130%;
+	text-align: center;
+	}
+.divPage .imgInline {
+	margin-bottom: 10px;
+	}
+
+.divPage > .imgRightMargin { /* 10/12/26 by CC -- the image from the front matter's rightMarginImage, at the top right with the text wrapping around it. 10/27/26: only that one; an image at the head of a paragraph (floatLeadImages) is floated by the stylesheet's own rule for it */
+	float: right;
+	clear: right; /* 11/11/26: under the arrows, not beside them */
+	max-width: 40%;
+	margin: 0.25em 0 0.75em 1.25em;
+	}
+
+:where(.divPage) pre { /* bootstrap's pre wraps, has a border and a color of its own; the stylesheets set the rest */
+	margin: 0 0 1em 0;
+	border: 0;
+	color: inherit;
+	white-space: pre;
+	word-break: normal;
+	word-wrap: normal;
+	}
+:where(.divPage) code { /* bootstrap's code is pink in a box */
+	padding: 0;
+	color: inherit;
+	background-color: transparent;
+	border: 0;
+	border-radius: 0;
+	white-space: normal;
+	}
+:where(.divPage) blockquote {
+	border: 0;
+	}
+.divPage blockquote p { /* bootstrap's "blockquote p" outweighs a bare tag, so this one needs the class */
+	margin: 0 0 1em 0;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	}
+
+html { /* 10/30/26 by CC -- the scrollbar's space is reserved on every page, so a short page that doesn't scroll sits exactly where a long one does; the arrows and the column don't move from post to post (Dave). GitHub's and Twitter's fix. Overlay scrollbars take no space, so nothing changes there */
+	scrollbar-gutter: stable;
+	}
+
+/* 10/16/26 by CC -- the header the browser draws from the front matter, in its own area above the text; every piece has a class so the user's CSS can arrange it. 10/30/26: the title first, left aligned, then the byline row, small and in the app's font, with the arrows at its right end (Dave, after the pattern elsewhere and a second opinion; see fillPageHeader), then the description. Before: dateline first, scripting.com's order, and the arrows at the end of the title's line */
+.divPageHeader { /* 10/27/26: the type comes from the stylesheet now, like the page's; the arrows are placed against this box */
+	position: relative;
+	margin: 0 0 1.5em 0;
+	}
+.divPageHeader:empty {
+	display: none;
+	}
+.divPageArrows { /* 10/30/26: at the right end of the byline row (for a day it was at the end of the title's line, centered with it) */
+	margin-left: auto;
+	padding-left: 1em;
+	font-size: 16px;
+	line-height: 1;
+	white-space: nowrap;
+	}
+.divPageArrows a {
+	margin-left: 0.5em;
+	color: #888;
+	text-decoration: none;
+	}
+.divPageArrows a:hover {
+	color: #222;
+	}
+.divPageArrows a.disabled {
+	color: #ddd;
+	cursor: default;
+	}
+.divPageHeader > .divPageArrows { /* 11/11/26 by CC -- the arrows in the upper right corner of the page (Dave: "upper right corner of page for now. let's see what issues that raises if any"). They were on the headline's line; BonBon draws no headline now, the writer places the title with a macro. Floated, so the page's first lines run beside them and nothing is pushed down */
+	float: right;
+	margin: 0.35em 0 0.5em 1em;
+	padding-left: 0;
+	font-size: 18px;
+	position: relative; /* 11/12/26 by CC -- on top of the page's headline, which is as wide as the page and sat over the arrows, taking their clicks (Dave: "the left arrow does nothing") */
+	z-index: 1;
+	}
+.spanPageArrowsBalance { /* 11/12/26 by CC -- an empty box as wide as the arrows, at the left, when the stylesheet centers the page's first line, so the title centers on the column; sized by balancePageArrows. The margin is spelled out because bootstrap gives anything whose class has span in it 20px on the left */
+	float: left;
+	margin: 0;
+	}
+.divPageHeader:has(> .divPageArrows) { /* the header is only the arrows then, and takes no room of its own */
+	margin: 0;
+	}
+body.sourceShowing .divPageHeader > .divPageArrows, body.imageShowing .divPageHeader > .divPageArrows { /* over a listing or a picture they have a line to themselves, at the right; a listing beside a float would be narrowed all the way down */
+	float: none;
+	display: block;
+	margin: 0 0 4px 0;
+	text-align: right;
+	}
+.divLinkStatus { /* 10/29/26 by CC -- the address of the link under the mouse, Chrome's box in the lower left corner */
+	display: none;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	z-index: 30;
+	max-width: 60%;
+	padding: 4px 8px;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	color: #333;
+	background-color: #f1f1f1;
+	border: 1px solid #ccc;
+	border-left: none;
+	border-bottom: none;
+	border-top-right-radius: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	}
+.divLinkStatus.showing {
+	display: block;
+	}
+.divSearchForm { /* 10/30/26 by CC -- the top of a search results page, Daytona's: the box with the search in it and the Search button, centered; the count of hits under them, small. See fillSearchForm. Later the same day: the app's font, not the page's (Dave: "this doesn't belong to markdown it belongs to our software"), and five pixels less above the box */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+	margin: 3px 0 0.4em 0;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	}
+.divPageHeader .inputSearchForm { /* two classes, so these beat bootstrap's input[type="text"] rule */
+	width: 270px;
+	height: auto;
+	margin: 0;
+	padding: 6px 10px;
+	font-size: 15px;
+	line-height: normal;
+	font-family: inherit;
+	color: #222;
+	background-color: white;
+	border: 1px solid #bbb;
+	border-radius: 4px;
+	box-shadow: none;
+	}
+.divPageHeader .buttonSearchForm {
+	margin: 0;
+	padding: 6px 12px;
+	font-size: 14px;
+	line-height: normal;
+	font-family: inherit;
+	color: #222;
+	background-color: #f0f0f0;
+	border: 1px solid #bbb;
+	border-radius: 4px;
+	cursor: pointer;
+	}
+.divSearchHits {
+	margin: 0 0 1.5em 0;
+	text-align: center;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 12px;
+	color: var(--muted, #555);
+	}
+
+
+/* 10/27/26 by CC -- the stylesheets button, an A, left of the three dots, and the panel it opens: one pill per stylesheet, the current one filled in, the preview page's row */
+.divStylesheetsPanel {
+	display: none;
+	position: absolute;
+	right: 12px;
+	top: 70px;
+	z-index: 20;
+	gap: 6px;
+	flex-wrap: wrap;
+	max-width: 420px;
+	padding: 10px 12px;
+	background-color: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	}
+.divStylesheetsPanel.showing {
+	display: flex;
+	}
+.divStylesheetsPanel .buttonStylesheet { /* two classes, so these beat bootstrap's button rules */
+	margin: 0;
+	padding: 4px 12px;
+	font: inherit;
+	line-height: 1.4;
+	color: #222;
+	background-color: transparent;
+	border: 1px solid #bbb;
+	border-radius: 999px;
+	cursor: pointer;
+	}
+.divStylesheetsPanel .buttonStylesheet:hover {
+	background-color: #f0f0f0;
+	}
+.divStylesheetsPanel .buttonStylesheet.current {
+	color: white;
+	background-color: #222;
+	border-color: #222;
+	}
+
+/* 10/16/26 by CC -- the three-dots menu at the right end of the address bar. 10/30/26: the three icons at the right (search, stylesheet, this) are the size and spacing of the four at the left (Dave) */
+.buttonMore, .buttonSearch, .buttonSource, .buttonStylesheets {
+	margin-left: 20px; /* 11/12/26: between the icons at the right, the same as between the buttons at the left (it was 13 and 14) */
+	padding: 0;
+	font-size: 20px; /* 11/16/26 by CC -- bigger, with the buttons at the left; Dave's number; it was 16 */
+	cursor: pointer;
+	color: #444;
+	}
+.buttonSearch { /* 11/12/26 by CC -- between the address bar and the first icon, the same as between the Home button and the address bar; Dave's number */
+	margin-left: 16px;
+	display: none; /* 11/16/26 by CC -- the magnifying glass is out of sight for everyone, Dave's rule from his own stylesheet: "i don't want to answer questions about this yet. and having the icon there will raise them", a feature held in reserve "until we need something new to show people". Search itself is all still here; take this line out to bring the button back */
+	}
+
+/* 10/29/26 by CC -- the search button, left of the stylesheets button, and the bar it opens, the Find bar's look */
+.buttonSearch.disabled, .buttonSource.disabled {
+	color: #ccc;
+	cursor: default;
+	}
+
+.buttonSource.current { /* 11/3/26 by CC -- the Markdown button, on: the page's text is showing; rss.chat's green, the prior art Dave named (its editor's "Toggle markdown mode" button, the same icon) */
+	color: #2ea44f;
+	}
+
+body.stylesheetSwitching .divPageColumn { /* 11/3/26 by CC -- blank while a new stylesheet loads, so the page is drawn once, in it, with its fonts; see switchStylesheet */
+	visibility: hidden;
+	}
+.divSearchBar {
+	display: none;
+	position: fixed;
+	top: var(--chromeHeight, 90px);
+	right: 24px;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	color: #444;
+	background-color: white;
+	border: 1px solid #ccc;
+	border-top: none;
+	border-radius: 0 0 8px 8px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+	z-index: 20;
+	}
+.divSearchBar.showing {
+	display: flex;
+	}
+.divSearchBar .inputSearch {
+	width: 220px;
+	height: auto;
+	margin: 0;
+	padding: 4px 8px;
+	font-size: 14px;
+	line-height: normal;
+	font-family: inherit;
+	color: #222;
+	border: 1px solid #bbb;
+	border-radius: 4px;
+	box-shadow: none;
+	outline: none;
+	}
+.divSearchBar .inputSearch:focus {
+	border-color: #4a90d9;
+	box-shadow: none;
+	}
+.divSearchBar i {
+	cursor: pointer;
+	}
+.divMoreMenu {
+	display: none;
+	position: absolute;
+	right: 12px;
+	top: 70px;
+	z-index: 20;
+	min-width: 180px;
+	padding: 6px 0;
+	background-color: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	font-family: Ubuntu, sans-serif;
+	font-size: 14px;
+	}
+.divMoreMenu.showing {
+	display: block;
+	}
+.divMoreMenuItem {
+	padding: 6px 16px;
+	cursor: pointer;
+	white-space: nowrap;
+	}
+.divMoreMenuItem:hover {
+	background-color: #f0f0f0;
+	}
+.divMoreMenuSeparator { /* 10/19/26 by CC -- the lines between the groups in Dave's outline */
+	height: 1px;
+	margin: 5px 0;
+	background-color: #ddd;
+	}
+
+/* 10/17/26 by CC -- the sidebar: the site's table of contents as a calendar, from /.well-known/toc.opml. Chrome, the reader's: open or closed is remembered, the look is theirs to change. Days with posts get a faint mark, so a site with a post every day still looks calm; only the day you're on stands out (Dave) */
+.divSidebar { /* 10/17/26 by CC -- beside the text, at the gap, smaller and lighter than the text: Dave, "it draws all the attention away from the text, that's what matters." Sticky, so it stays put as the page scrolls */
+	display: none;
+	flex: none;
+	position: sticky;
+	top: calc(var(--chromeHeight, 115px) + 24px);
+	width: 160px;
+	margin-left: var(--calendarGap);
+	padding: 6px 0 0 0; /* sticky's top puts it level with the column's text; the 6px centers the month's name on the date line, whose line is taller */
+	box-sizing: border-box;
+	font-family: Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 11px;
+	color: #666;
+	}
+body.sidebarShowing .divSidebar {
+	display: block;
+	}
+.divCalendarHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	font-size: 11px;
+	font-weight: bold;
+	color: #777;
+	}
+.spanCalendarMonth, .spanCalendarArrows {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	}
+.spanCalendarArrows i {
+	margin-left: 8px;
+	font-size: 9px;
+	color: #999;
+	cursor: pointer;
+	}
+.spanCalendarArrows i.disabled {
+	color: #ccc;
+	cursor: default;
+	}
+.divCalendarGrid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 2px;
+	text-align: center;
+	}
+.divCalendarWeekday {
+	color: #bbb;
+	font-size: 9px;
+	}
+.divCalendarDay {
+	height: 18px;
+	line-height: 18px;
+	color: #ccc;
+	}
+.divCalendarDay.blank {
+	visibility: hidden;
+	}
+.aCalendarDay {
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	line-height: 18px;
+	border-radius: 3px; /* square, Dave; not circles */
+	color: #666;
+	background-color: #f4f4f4; /* the faint mark: this day has posts */
+	text-decoration: none;
+	}
+.aCalendarDay:hover {
+	background-color: #e0e0e0;
+	color: #333;
+	text-decoration: none;
+	}
+.aCalendarDay.current { /* the day you're on: a soft red, not a loud one */
+	color: #a33;
+	background-color: #f3cdcd;
+	font-weight: bold;
+	}
+
+/* 10/18/26 by CC -- the typeahead under the address bar, Chrome's way: title and address per row, the selected row shaded */
+.divTypeahead {
+	display: none;
+	position: absolute;
+	left: -1px;
+	right: -1px;
+	top: 100%;
+	z-index: 30;
+	background-color: white;
+	border: 1px solid #bbb;
+	border-top: none;
+	border-radius: 0 0 6px 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	}
+.divTypeahead.showing {
+	display: block;
+	}
+.divTypeaheadRow {
+	padding: 6px 12px;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	}
+.divTypeaheadRow:hover, .divTypeaheadRow.selected {
+	background-color: #e8f0fe;
+	}
+.spanTypeaheadTitle, .spanTypeaheadUrl {
+	float: none;
+	margin-left: 0;
+	min-height: 0;
+	}
+.spanTypeaheadTitle {
+	color: #222;
+	margin-right: 10px;
+	}
+.spanTypeaheadUrl {
+	color: #666;
+	}
+
+/* 10/19/26 by CC -- heading permalinks, GitHub's way: a chain-link icon in the left margin, shown when the heading is hovered */
+.divPage h1, .divPage h2, .divPage h3, .divPage h4, .divPage h5, .divPage h6 {
+	position: relative;
+	scroll-margin-top: calc(var(--chromeHeight, 115px) + 12px); /* a heading scrolled to lands below the fixed chrome, not under it */
+	}
+.divPage .aHeadingLink { /* 10/19/26: the box runs from the margin to the text's edge with no gap and is as tall as the heading, so the pointer reaches it from any direction (before, a 22px gap of nothing made it vanish on the way); the heading's own color, not link blue (Dave) */
+	position: absolute;
+	left: -32px;
+	top: 0;
+	bottom: 0;
+	width: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	font-size: 0.75em;
+	color: inherit;
+	opacity: 0.6;
+	visibility: hidden;
+	text-decoration: none;
+	}
+.divPage h1:hover .aHeadingLink, .divPage h2:hover .aHeadingLink, .divPage h3:hover .aHeadingLink, .divPage h4:hover .aHeadingLink, .divPage h5:hover .aHeadingLink, .divPage h6:hover .aHeadingLink {
+	visibility: visible;
+	}
+.divPage .aHeadingLink:hover { /* two classes, so it outweighs the page's own link color */
+	opacity: 1;
+	color: inherit;
+	}
+
+/* 10/19/26 by CC -- a 1-pixel dotted lavender outline on every component, WordLand's way, Dave's practice: hard to see, and it shows at once when things don't line up. 11/7/26: off by default, flLavenderLines in config.json turns it on (a bug report to Dave: "especially visible on black backgrounds"); index.js puts the class on the body */
+:root {
+	--devOutline: none;
+	}
+body.lavenderLines {
+	--devOutline: 1px dotted lavender;
+	}
+.divTabBar, .divAddressBar, .divBookmarksBar, .divPageHeader, .divPageArrows, .divPage {
+	outline: var(--devOutline);
+	}

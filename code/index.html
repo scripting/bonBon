@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Markdown Browser</title>
+		<link rel="stylesheet" href="https://s3.amazonaws.com/scripting.com/code/fontawesome/5.12.0/css/all.css">
+		<!-- 10/12/26 by CC -- the bookmarks menu and the outline dialog it edits in, the includes Dave's apps use -->
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700"> <!-- the outline dialog's font -->
+		<script src="https://s3.amazonaws.com/scripting.com/code/includes/jquery-1.9.1.min.js"></script>
+		<link rel="stylesheet" href="https://s3.amazonaws.com/scripting.com/code/includes/bootstrap.css">
+		<script src="https://s3.amazonaws.com/scripting.com/code/includes/bootstrap.min.js"></script>
+		<script src="https://s3.amazonaws.com/scripting.com/code/includes/basic/code.js"></script>
+		<link rel="stylesheet" href="https://s3.amazonaws.com/scripting.com/code/includes/basic/styles.css">
+		<script src="https://s3.amazonaws.com/scripting.com/code/bookmarksmenu/includes.js"></script>
+		<link rel="stylesheet" href="https://s3.amazonaws.com/scripting.com/code/bookmarksmenu/includes.css">
+		<script src="https://s3.amazonaws.com/scripting.com/code/bookmarksmenu/bookmarks.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"> <!-- 10/30/26 by CC -- color for an XML or HTML file shown as source; see getSourceHtml -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+		<script src="node_modules/dompurify/dist/purify.min.js"></script> <!-- 11/19/26 by CC -- cleans the HTML a page handler sends back; see getHandlerHtml. It's in the app, not on a server: if it didn't load, a handler's HTML would not be shown -->
+		<link rel="stylesheet" href="index.css">
+		</head>
+	<body>
+		<div class="divChrome">
+			<div class="divTabBar">
+				<div class="divTabs"></div>
+				<i class="fas fa-plus buttonNewTab" title="New tab"></i>
+				<span class="spanVersion"></span> <!-- 10/13/26 by CC -- the version, upper right, the way Atlantis shows it -->
+				</div>
+			<div class="divAddressBar">
+				<div class="divNavButtons">
+					<i class="fas fa-arrow-left buttonBack" title="Back"></i>
+					<i class="fas fa-arrow-right buttonForward" title="Forward"></i>
+					<i class="fas fa-redo-alt buttonReload" title="Reload"></i>
+					<i class="fas fa-home buttonHome" title="Home"></i>
+					</div>
+				<div class="divAddressField"> <!-- 10/12/26 by CC -- the site's icon at the left of the address, as in Chrome; drag it to open the page somewhere else -->
+					<span class="spanAddressFavicon"></span>
+					<input class="inputAddress" type="text" placeholder="Enter the URL of a Markdown page" spellcheck="false" autocomplete="off">
+					<div class="divTypeahead"></div> <!-- 10/18/26 by CC -- the pages you've visited that match what you're typing, Chrome's way -->
+					</div>
+				<i class="fas fa-search buttonSearch" title="Search this site"></i> <!-- 10/29/26 by CC -- the site's search, when the site has one: opens a bar like Find's; the word goes to the site's search program -->
+				<i class="fab fa-markdown buttonSource" title="Show the Markdown source"></i> <!-- 11/3/26 by CC -- the page's Markdown as text, or the page; a display switch (Dave) -->
+				<i class="fas fa-font buttonStylesheets" title="Choose a new stylesheet"></i> <!-- 10/27/26 by CC -- the reader picks the look of the page: the stylesheets in the data folder, in a panel, the current one filled in -->
+				<div class="divStylesheetsPanel"></div>
+				<i class="fas fa-ellipsis-v buttonMore" title="More"></i> <!-- 10/16/26 by CC -- the three-dots menu, Chrome's spot: commands the reader wants close at hand -->
+				<div class="divMoreMenu"> <!-- 10/19/26: Dave's outline for it, the commands from the menu bar that have no button in the chrome -->
+					<div class="divMoreMenuItem" data-command="find">Find on page</div>
+					<div class="divMoreMenuSeparator"></div>
+					<div class="divMoreMenuItem" data-command="addBookmark">Add Bookmark...</div>
+					<div class="divMoreMenuItem" data-command="editBookmarks">Edit Bookmarks...</div>
+					<div class="divMoreMenuSeparator"></div>
+					<div class="divMoreMenuItem" data-command="viewSource">View Markdown source</div>
+					<div class="divMoreMenuSeparator"></div>
+					<div class="divMoreMenuItem" data-command="openDataFolder">Data folder</div>
+					<div class="divMoreMenuItem" data-command="devTools">Developer tools</div>
+					</div>
+				</div>
+			<div class="divBookmarksBar"></div> <!-- 10/13/26 by CC -- the bookmarks bar, Chrome's; drop the address bar's icon here -->
+			</div>
+		<div class="divFindBar"> <!-- 10/12/26 by CC -- find in page, Cmd-F; drops down at the top right, the way Chrome's does -->
+			<input class="inputFind" type="text" placeholder="Find in page" spellcheck="false">
+			<span class="spanFindCount"></span>
+			<i class="fas fa-chevron-up buttonFindPrevious" title="Previous"></i>
+			<i class="fas fa-chevron-down buttonFindNext" title="Next"></i>
+			<i class="fas fa-times buttonFindClose" title="Close"></i>
+			</div>
+		<div class="divSearchBar"> <!-- 10/29/26 by CC -- search this site, the Find bar's shape; Return sends the word -->
+			<input class="inputSearch" type="text" placeholder="Search this site" spellcheck="false">
+			<i class="fas fa-times buttonSearchClose" title="Close"></i>
+			</div>
+		<div class="divLinkStatus"></div> <!-- 10/29/26 by CC -- the address of the link under the mouse, lower left, every browser since MSIE -->
+		<div class="divPageArea"> <!-- 10/17/26 by CC -- the column and, when the site has a calendar, the calendar beside it; without one the column is centered -->
+			<div class="divPageColumn"> <!-- 10/16/26 by CC -- the column: the header the browser draws, then the page, which is only what came from the Markdown -->
+				<div class="page"> <!-- 10/27/26 by CC -- the reading column, the stylesheets' name for it: they set its width and margins, the way they expect a page to be built (a title in an h1, then the rendered Markdown) -->
+					<div class="divPageHeader"></div>
+					<div class="divPage"></div>
+					</div>
+				</div>
+			<div class="divSidebar"></div> <!-- 10/17/26 by CC -- the site's table of contents as a calendar, from /.well-known/toc.opml, when the site has one -->
+			</div>
+		<div class="divBookmarksMenuHolder"> <!-- the bookmarks code builds its own menu into this list; the one you see is in the menu bar, so this stays hidden -->
+			<ul id="idBookmarksList"></ul>
+			</div>
+		<script src="index.js"></script>
+		</body>
+	</html>

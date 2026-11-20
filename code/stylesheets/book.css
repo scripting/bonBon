@@ -1,0 +1,132 @@
+/* Book — long-form reading. Large old-style serif, generous leading, a narrow centered column, dates set as centered running heads, images set as plates. */
+
+@import url("fonts/eb-garamond.css"); /* 10/27/26 by CC -- the font ships with the app, in the fonts folder beside this file, so the page is the same offline and Google never hears from it */
+
+:root {
+	--bg: #fdfcf9;
+	--fg: #2a2520;
+	--muted: #857b6e;
+	--rule: #e3ddd1;
+	--link: #3b4f8a;
+	--link-visited: #6b4e80;
+	--accent: #8b3a2f;
+	--font-body: "EB Garamond", Garamond, "Hoefler Text", Georgia, serif;
+	--font-head: var(--font-body);
+	--font-code: ui-monospace, Menlo, Consolas, monospace;
+	--tint-code: rgba(42, 37, 32, 0.06); /* 10/27/26 by CC -- the shaded backgrounds and the faded underline; they were color-mix (), which BonBon's Chromium (108) doesn't have */
+	--tint-pre: rgba(42, 37, 32, 0.05);
+	--link-underline: rgba(59, 79, 138, 0.5);
+	}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #1d1a17; --fg: #e9e2d6; --muted: #a0958a; --rule: #3d3731;
+		--link: #a9b8ea; --link-visited: #c9b0e0; --accent: #e08a7a; color-scheme: dark;
+		--tint-code: rgba(233, 226, 214, 0.06); --tint-pre: rgba(233, 226, 214, 0.05); --link-underline: rgba(169, 184, 234, 0.5);
+		}
+	}
+:root[data-theme="dark"] {
+	--bg: #1d1a17; --fg: #e9e2d6; --muted: #a0958a; --rule: #3d3731;
+	--link: #a9b8ea; --link-visited: #c9b0e0; --accent: #e08a7a; color-scheme: dark;
+		--tint-code: rgba(233, 226, 214, 0.06); --tint-pre: rgba(233, 226, 214, 0.05); --link-underline: rgba(169, 184, 234, 0.5);
+	}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font-body);
+	font-size: 21px;
+	line-height: 1.55;
+	}
+.page {
+	max-width: 36rem;
+	margin: 0 auto;
+	padding-block: 3.5rem 6rem;
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+	}
+
+h1 {
+	font-weight: 500;
+	font-size: 2.6rem;
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	text-align: center;
+	margin: 0 0 3rem;
+	text-wrap: balance;
+	}
+h2 {
+	font-weight: 400;
+	font-size: 0.85rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	text-align: center;
+	color: var(--muted);
+	margin: 3.5rem 0 1.5rem;
+	clear: both;
+	}
+h2::before, h2::after { content: "  ·  "; color: var(--rule); }
+h3 {
+	font-weight: 500;
+	font-size: 1.6rem;
+	line-height: 1.2;
+	font-style: italic;
+	margin: 2.5rem 0 1rem;
+	text-wrap: balance;
+	clear: both;
+	}
+h2 a, h3 a { color: inherit; text-decoration: none; }
+h2 a:hover, h3 a:hover { color: var(--accent); }
+
+p { margin: 0 0 1.2rem; }
+a { color: var(--link); text-decoration: underline; text-decoration-thickness: 0.5px; text-underline-offset: 3px; text-decoration-color: var(--link-underline); }
+a:visited { color: var(--link-visited); }
+a:hover { color: var(--accent); text-decoration-color: currentColor; }
+strong { font-weight: 600; }
+
+a[title="Direct link to this item."] {
+	color: var(--muted);
+	text-decoration: none;
+	font-size: 0.7em;
+	vertical-align: 0.15em;
+	padding-left: 0.35em;
+	}
+a[title="Direct link to this item."]:hover { color: var(--accent); }
+
+img {
+	max-width: 100%;
+	height: auto;
+	}
+p > img:first-child {
+	float: right;
+	max-width: 38%;
+	margin: 0.35rem 0 0.75rem 1.5rem;
+	}
+p > img:only-child {
+	float: none;
+	display: block;
+	max-width: 100%;
+	margin: 2rem auto;
+	}
+
+ul, ol { padding-left: 1.6rem; margin: 0 0 1.2rem; }
+li { margin-bottom: 0.4rem; }
+li > p { margin-bottom: 0.5rem; }
+
+blockquote {
+	margin: 2rem 1.5rem;
+	padding: 0;
+	font-style: italic;
+	color: var(--fg);
+	text-align: center;
+	}
+blockquote p:last-child { margin-bottom: 0; }
+hr { border: 0; text-align: center; margin: 3rem 0; color: var(--muted); }
+hr::after { content: "❧"; font-size: 1.4rem; }
+
+code { font-family: var(--font-code); font-size: 0.78em; background: var(--tint-code); padding: 0.1em 0.3em; border-radius: 3px; }
+pre { font-family: var(--font-code); font-size: 0.8rem; line-height: 1.5; overflow-x: auto; padding: 1rem; background: var(--tint-pre); border-radius: 4px; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; font-size: 0.9em; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; font-variant: small-caps; letter-spacing: 0.05em; }

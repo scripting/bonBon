@@ -1,0 +1,119 @@
+/* Classic — the original web. Georgia body on white, Ubuntu for the date headings, blue underlined links, images floated right. The scripting.com lineage. */
+
+:root {
+	--bg: #ffffff;
+	--fg: #000000;
+	--muted: #808080;
+	--rule: #e0e0e0;
+	--link: #0000ee;
+	--link-visited: #551a8b;
+	--accent: #cc0000;
+	--font-body: Georgia, "Times New Roman", Times, serif;
+	--font-head: Ubuntu, "Helvetica Neue", Arial, sans-serif;
+	--font-code: "Courier New", Courier, monospace;
+	--tint-pre: rgba(0, 0, 0, 0.04); /* 10/27/26 by CC -- the shaded background; it was color-mix (), which BonBon's Chromium (108) doesn't have */
+	}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #121212; --fg: #e4e4e4; --muted: #8f8f8f; --rule: #333333;
+		--link: #8ab4f8; --link-visited: #c58af9; --accent: #ff6b6b; color-scheme: dark;
+		--tint-pre: rgba(228, 228, 228, 0.04);
+		}
+	}
+:root[data-theme="dark"] {
+	--bg: #121212; --fg: #e4e4e4; --muted: #8f8f8f; --rule: #333333;
+	--link: #8ab4f8; --link-visited: #c58af9; --accent: #ff6b6b; color-scheme: dark;
+		--tint-pre: rgba(228, 228, 228, 0.04);
+	}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font-body);
+	font-size: 17px;
+	line-height: 1.5;
+	}
+.page {
+	max-width: 40rem;
+	margin: 0 auto;
+	padding-block: 2rem 5rem;
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+	}
+
+h1 {
+	font-family: var(--font-head);
+	font-weight: 700;
+	font-size: 2.2rem;
+	line-height: 1.15;
+	margin: 0 0 1.5rem;
+	text-wrap: balance;
+	}
+h2 {
+	font-family: var(--font-head);
+	font-weight: 500;
+	font-size: 1.05rem;
+	color: var(--muted);
+	margin: 3rem 0 1rem;
+	clear: both;
+	}
+h3 {
+	font-family: var(--font-head);
+	font-weight: 700;
+	font-size: 1.4rem;
+	line-height: 1.25;
+	margin: 2rem 0 0.75rem;
+	text-wrap: balance;
+	clear: both;
+	}
+h2 a, h3 a { color: inherit; text-decoration: none; }
+h2 a:hover, h3 a:hover { text-decoration: underline; }
+
+p { margin: 0 0 1rem; }
+a { color: var(--link); text-decoration: underline; }
+a:visited { color: var(--link-visited); }
+a:hover { color: var(--accent); }
+strong { font-weight: bold; }
+
+a[title="Direct link to this item."] {
+	color: var(--muted);
+	text-decoration: none;
+	font-family: var(--font-head);
+	font-size: 0.8em;
+	}
+a[title="Direct link to this item."]:hover { color: var(--accent); }
+
+img {
+	max-width: 100%;
+	height: auto;
+	}
+p > img:first-child {
+	float: right;
+	max-width: 42%;
+	margin: 0 0 0.5rem 1rem;
+	}
+p > img:only-child {
+	float: none;
+	display: block;
+	max-width: 100%;
+	margin: 1.25rem 0;
+	}
+
+ul, ol { padding-left: 2rem; margin: 0 0 1rem; }
+li { margin-bottom: 0.25rem; }
+li > p { margin-bottom: 0.5rem; }
+
+blockquote {
+	margin: 1.25rem 2rem;
+	padding: 0;
+	color: var(--fg);
+	font-style: italic;
+	}
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
+
+code { font-family: var(--font-code); font-size: 0.95em; }
+pre { font-family: var(--font-code); font-size: 0.9rem; line-height: 1.4; overflow-x: auto; padding: 0.75rem 1rem; border: 1px solid var(--rule); background: var(--tint-pre); }
+table { border-collapse: collapse; margin: 1.25rem 0; }
+th, td { text-align: left; padding: 0.35rem 0.6rem; border: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-head); font-weight: 500; }

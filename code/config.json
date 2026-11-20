@@ -1,0 +1,20 @@
+{
+	"windowWidth": 1000,
+	"windowHeight": 800,
+	"maxRedirects": 10,
+	"urlHomePage": "https://dave.writersweb.org/",
+	"maxHistoryMenuItems": 25,
+	"flBookmarksBar": true,
+	"flLavenderLines": false,
+	"urlUserCss": "",
+	"flCalendar": false,
+	"urlHitCounterServer": "https://counters.scripting.com/hello",
+	"urlForHitCounter": "https://github.com/scripting/bonBon",
+	"extensionsForTypes": {
+		"application/json": "json",
+		"application/javascript": "js",
+		"application/x-javascript": "js",
+		"text/javascript": "js"
+		},
+	"ctSecsHandlerTimeout": 5
+	}

@@ -1,0 +1,21 @@
+{
+	"name": "mdbrowser",
+	"productName": "BonBon",
+	"version": "0.6.55",
+	"description": "A browser for a web made of Markdown files.",
+	"main": "main.js",
+	"scripts": {
+		"start": "electron ."
+	},
+	"author": "Dave Winer <dave@scripting.com>",
+	"license": "MIT",
+	"dependencies": {
+		"dompurify": "3.4.18",
+		"js-yaml": "4.1.0",
+		"marked": "3.0.8",
+		"opml": "0.5.8"
+	},
+	"devDependencies": {
+		"electron": "22.3.27"
+	}
+}

@@ -1,0 +1,133 @@
+/* Newsprint — a daily paper. Serif body, small sans dateline headings, warm paper, images floated into the text. */
+
+@import url("fonts/source-serif-4.css"); /* 10/27/26 by CC -- the fonts ship with the app, in the fonts folder beside this file, so the page is the same offline and Google never hears from it */
+@import url("fonts/libre-franklin.css");
+
+:root {
+	--bg: #f8f5ee;
+	--fg: #1e1b16;
+	--muted: #6f685c;
+	--rule: #d9d2c3;
+	--link: #1a4d8f;
+	--link-visited: #5a3d7a;
+	--accent: #a4231e;
+	--font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+	--font-head: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+	--font-code: ui-monospace, Menlo, Consolas, monospace;
+	--tint-code: rgba(30, 27, 22, 0.07); /* 10/27/26 by CC -- the shaded backgrounds; they were color-mix (), which BonBon's Chromium (108) doesn't have */
+	--tint-pre: rgba(30, 27, 22, 0.06);
+	}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #1b1915; --fg: #e8e2d6; --muted: #9c9385; --rule: #3a362f;
+		--link: #8db4e8; --link-visited: #c3a6e0; --accent: #e06a63; color-scheme: dark;
+		--tint-code: rgba(232, 226, 214, 0.07); --tint-pre: rgba(232, 226, 214, 0.06);
+		}
+	}
+:root[data-theme="dark"] {
+	--bg: #1b1915; --fg: #e8e2d6; --muted: #9c9385; --rule: #3a362f;
+	--link: #8db4e8; --link-visited: #c3a6e0; --accent: #e06a63; color-scheme: dark;
+		--tint-code: rgba(232, 226, 214, 0.07); --tint-pre: rgba(232, 226, 214, 0.06);
+	}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font-body);
+	font-size: 18px;
+	line-height: 1.6;
+	}
+.page {
+	max-width: 42rem;
+	margin: 0 auto;
+	padding-block: 2.5rem 5rem;
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+	}
+
+h1 {
+	font-family: var(--font-head);
+	font-weight: 700;
+	font-size: 2.4rem;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	margin: 0 0 0.6rem;
+	padding-bottom: 0.6rem;
+	border-bottom: 3px double var(--rule);
+	text-wrap: balance;
+	}
+h2 {
+	font-family: var(--font-head);
+	font-weight: 700;
+	font-size: 0.8rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--muted);
+	margin: 3rem 0 1rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--rule);
+	clear: both;
+	}
+h3 {
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: 1.5rem;
+	line-height: 1.25;
+	margin: 2.25rem 0 0.75rem;
+	text-wrap: balance;
+	clear: both;
+	}
+h2 a, h3 a { color: inherit; text-decoration: none; }
+h2 a:hover, h3 a:hover { color: var(--accent); }
+
+p { margin: 0 0 1.1rem; }
+a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:visited { color: var(--link-visited); }
+a:hover { color: var(--accent); }
+strong { font-weight: 600; }
+
+/* the trailing "#" permalink on each item */
+a[title="Direct link to this item."] {
+	color: var(--muted);
+	text-decoration: none;
+	font-family: var(--font-head);
+	font-size: 0.75em;
+	padding-left: 0.25em;
+	}
+
+img {
+	max-width: 100%;
+	height: auto;
+	}
+p > img:first-child {
+	float: right;
+	max-width: 40%;
+	margin: 0.25rem 0 0.75rem 1.25rem;
+	}
+p > img:only-child {
+	float: none;
+	display: block;
+	max-width: 100%;
+	margin: 1.5rem auto;
+	}
+
+ul, ol { padding-left: 1.5rem; margin: 0 0 1.1rem; }
+li { margin-bottom: 0.35rem; }
+li > p { margin-bottom: 0.5rem; }
+
+blockquote {
+	margin: 1.5rem 0;
+	padding: 0 0 0 1.25rem;
+	border-left: 3px solid var(--accent);
+	color: var(--muted);
+	font-style: italic;
+	}
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+code { font-family: var(--font-code); font-size: 0.88em; background: var(--tint-code); padding: 0.1em 0.3em; border-radius: 3px; }
+pre { font-family: var(--font-code); font-size: 0.85rem; line-height: 1.5; overflow-x: auto; padding: 1rem; background: var(--tint-pre); border-radius: 4px; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; font-size: 0.95em; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-head); font-size: 0.8em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
