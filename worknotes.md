@@ -1,8 +1,12 @@
 #### 11/19/26; 6:57:03 PM by DW
 
-I think people could use an example blog with all files in Markdown instead of HTML. 
+As part of getting BonBon ready for the world, we converted a few websites from HTML to Markdown. 
 
-We're going to do a bunch of these, here we start off with Scripting News, going back to 2017.
+Not just the files, but the structures -- the home page, the monthly archive, daily pages, and story pages and more. 
+
+I'm seeing people start to experiment with making their own sites. I want to show them how we did it with Scripting News.
+
+This is [where you go](https://github.com/scripting/bonBon/blob/main/demos/bloginmarkdown/readme.md). 
 
 #### 11/19/26; 2:48:53 PM by DW
 
