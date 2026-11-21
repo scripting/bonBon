@@ -6,3 +6,5 @@ We also use [front matter](https://www.markdowntools.com/blog/markdown-frontmatt
 
 Click [here](https://github.com/scripting/bonBon/raw/main/demos/bloginmarkdown/scripting.zip) to download the archive. 
 
+You can view Dave's blog in BonBon [here](https://demo.bonbonweb.org/?url=https%3A%2F%2Fdave.writersweb.org%2Fscripting%2Findex.md).
+
