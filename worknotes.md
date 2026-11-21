@@ -1,3 +1,7 @@
+#### 11/21/26; 10:25:43 AM by DW
+
+Uploaded a downloadable [snapshot](https://github.com/scripting/bonBon/blob/main/demos/brentbloginmarkdown/readme.md) of the inessential.com blog by Brent Simmons. 
+
 #### 11/20/26; 8:32:16 AM by DW
 
 We should have an RSS 2.0 feed for updates, but for now this worknotes.md file will have to do. I will try to keep it current. 
