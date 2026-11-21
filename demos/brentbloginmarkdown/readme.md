@@ -6,3 +6,5 @@ We started with the Markdown [archive](https://github.com/brentsimmons/inessenti
 
 Click [here](https://github.com/scripting/bonBon/raw/main/demos/brentbloginmarkdown/inessential.zip) to download the archive. 
 
+You can view his blog in BonBon [here](https://demo.bonbonweb.org/?url=https%3A%2F%2Fbrent.writersweb.org%2F).
+
