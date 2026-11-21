@@ -4,6 +4,8 @@ Uploaded a downloadable [snapshot](https://github.com/scripting/bonBon/blob/main
 
 How to link to sites for now: First point to the Markdown source, for people who aren't reading from the BonBon browser, they will see the Markdown source which is exactly what you'd expect for a historic browser like Firefox. Nod your head and move on. But if you're reading it in BonBon, you see a nicely rendered Markdown page. 
 
+Example
+
 *  Introducing <a href="https://brent.writersweb.org/">brent.writersweb.org</a>, as <a href="https://demo.bonbonweb.org/?url=https%3A%2F%2Fbrent.writersweb.org%2F">viewed</a> in BonBon. 
 
 It took a while to figure this out, and it's hard to anticipate something like this before shipping. In general we want people to get both the Markdown pointer, and a pointer linked into demo.bonbonweb.org. 
