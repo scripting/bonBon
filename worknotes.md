@@ -2,7 +2,7 @@
 
 Uploaded a downloadable [snapshot](https://github.com/scripting/bonBon/blob/main/demos/brentbloginmarkdown/readme.md) of the inessential.com blog by Brent Simmons. 
 
-How to link to sites for now: First point to the Markdown source, for people who aren't reading from the BonBon browser, they will see the Markdown source which is exactly what you'd expect for a historic browser like Firefox. Nod your head and move on. But if you're reading it in BonBon, you see a nicely rendered Markdown page. 
+How to link to sites for now: First point to the Markdown source, for people who aren't reading from the BonBon browser, they will see the Markdown source which is exactly what you'd expect for a historic browser like Safari. Nod your head and move on. But if you're reading it in BonBon, you see a nicely rendered Markdown page. 
 
 Demo:
 
