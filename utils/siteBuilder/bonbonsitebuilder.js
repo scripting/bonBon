@@ -11,7 +11,7 @@
 	makes blogs for that community. Any app that puts out feeds with
 	the Markdown text of each post, and a list of the feeds, would do.
 
-	Where the code came from: bonbonSiteBuilder of 11/6/26 (in old/),
+	Where the code came from: bonbonSiteBuilder of 11/6/26 (in archive/),
 	then rssToBonBon of 11/20/26, which made one blog from one feed
 	named in config.json. This is that code, with the blogs coming
 	from the server's list.
