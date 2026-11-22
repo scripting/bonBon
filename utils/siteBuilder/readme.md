@@ -18,7 +18,7 @@ Nothing in it is specific to rss.chat. Any app that puts out feeds with the Mark
 2. Edit `config.json`.
 3. `node bonbonsitebuilder.js` and leave it running.
 
-The first run reads the list, reads every feed, writes a post file for every item, and builds every blog. After that it reads the list and each feed every `pollMinutes`, and reads a feed the moment the feed's cloud server says it changed. A blog is rebuilt only when one of its posts is new or changed, and only the files that changed are written.
+The first run reads the list, reads every feed, writes a post file for every item, and builds every blog. After that it reads the list and each feed every `ctMinutesBetwPolls`, and reads a feed the moment the feed's cloud server says it changed. A blog is rebuilt only when one of its posts is new or changed, and only the files that changed are written.
 
 ### config.json
 
@@ -29,7 +29,7 @@ The first run reads the list, reads every feed, writes a post file for every ite
 	"blogsDomain": "bonbon.blog",
 	"blogsFolder": "../",
 	"reservedNames": ["chat", "build", "www"],
-	"pollMinutes": 1
+	"ctMinutesBetwPolls": 1
 	}
 ```
 
@@ -38,7 +38,7 @@ The first run reads the list, reads every feed, writes a post file for every ite
 3. `blogsDomain`: what goes after the person's name in a blog's address. With `bonbon.blog`, bull's blog is `bull.bonbon.blog`. Every name at that domain has to point at the machine the blogs are served from.
 4. `blogsFolder`: where the blogs' folders are made. Each folder is named for the blog's address, `bull.bonbon.blog`.
 5. `reservedNames`: names that never become a blog, the ones the domain uses for something else.
-6. `pollMinutes` (15): how often the list and every feed are read, whether or not the cloud server has called.
+6. `ctMinutesBetwPolls` (15): how often the list and every feed are read, whether or not the cloud server has called.
 7. `timeZone` (`America/New_York`): a post's day, for the day and month pages, is the day in this zone. One zone for every blog.
 8. `maxDaysOnHomePage` (25): the home page shows this many days, newest first.
 9. `blogs`: blogs that aren't in the list, for a feed from somewhere else. One entry per blog, each with `urlFeed`, `urlSite` and `outputFolder`.

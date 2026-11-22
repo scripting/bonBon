@@ -4,5 +4,5 @@
 	"blogsDomain": "bonbon.blog",
 	"blogsFolder": "../",
 	"reservedNames": ["chat", "build", "www"],
-	"pollMinutes": 1
+	"ctMinutesBetwPolls": 1
 	}

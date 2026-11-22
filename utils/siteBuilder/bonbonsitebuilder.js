@@ -79,7 +79,7 @@ var config = {
 	ctSecsBetwRenews: 23 * 60 * 60, //a feed's rssCloud request is good for a day; FeedLand renews at 23 hours
 	ctSecsRetryRenew: 60 * 60, //when a request fails, try again this much later
 	minSecsBetwRenewChecks: 60, //how often we look for a blog whose request is due
-	pollMinutes: 15, //the feeds are read on this timer whether or not rssCloud pinged
+	ctMinutesBetwPolls: 15, //the feeds are read on this timer whether or not rssCloud pinged
 	timeZone: "America/New_York", //a post's day, for the day and month pages, is the day in this zone
 	dataFolder: "data/", //the posts folders, one per blog, under here
 	maxDaysOnHomePage: 25, //whole days, newest first, the generator's default
@@ -696,7 +696,7 @@ function startup () {
 			});
 		davehttp.start (config, handleHttpRequest);
 		readListAndFeeds (true); //every blog at startup, built whether or not the feed has anything new, so the pages are as the code now writes them
-		setInterval (readListAndFeeds, config.pollMinutes * 60 * 1000);
+		setInterval (readListAndFeeds, config.ctMinutesBetwPolls * 60 * 1000);
 		setInterval (renewNextBlogIfReady, config.minSecsBetwRenewChecks * 1000);
 		});
 	}
