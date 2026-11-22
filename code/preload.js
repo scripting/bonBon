@@ -76,8 +76,8 @@ contextBridge.exposeInMainWorld ("mdBrowser", {
 	getFavicon: function (theUrl) { //10/12/26 by CC -- the icon of the page's site as a data URL, or undefined when it has none
 		return (ipcRenderer.invoke ("mdBrowser.getFavicon", theUrl));
 		},
-	getPage: function (theUrl) { //answers {flOk, url, frontMatter, html, source} or {flOk: false, url, status, message}
-		return (ipcRenderer.invoke ("mdBrowser.getPage", theUrl));
+	getPage: function (theUrl, flAsItCame) { //answers {flOk, url, frontMatter, html, source} or {flOk: false, url, status, message}. 11/21/26: flAsItCame, for View Source: an HTML page comes back as the HTML, its Markdown copy isn't looked for
+		return (ipcRenderer.invoke ("mdBrowser.getPage", theUrl, flAsItCame));
 		},
 	openInBrowser: function (theUrl) { //11/12/26 by CC -- the address opens in the reader's default browser; for a link to an HTML page
 		return (ipcRenderer.invoke ("mdBrowser.openInBrowser", theUrl));
