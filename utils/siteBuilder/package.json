@@ -1,0 +1,19 @@
+{
+	"name": "bonbonsitebuilder",
+	"description": "Makes a BonBon blog, a site made of Markdown files, for every person on an rss.chat server, and keeps each blog current as the person posts.",
+	"author": "Dave Winer <dave@scripting.com>",
+	"main": "bonbonsitebuilder.js",
+	"license": "MIT",
+	"version": "0.2.0",
+	"dependencies": {
+		"dateformat": "4.5.1",
+		"davehttp": "*",
+		"daverss": "^0.6.21",
+		"daveutils": "*",
+		"marked": "^3.0.8",
+		"opml": "*",
+		"reallysimple": "^0.5.5",
+		"request": "2.88.2",
+		"turndown": "7.2.2"
+		}
+	}
