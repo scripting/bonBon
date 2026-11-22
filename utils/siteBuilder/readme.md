@@ -1,5 +1,7 @@
 # bonbonSiteBuilder
 
+*This readme and the code in this folder were written by Claude, working with Dave Winer.*
+
 Makes a [BonBon](https://github.com/scripting/bonBon) blog, a site made of Markdown files, for every person on an [rss.chat](https://github.com/scripting/rss.chat) server, and keeps each blog current as the person posts.
 
 You join chat.bonbon.blog as bull. Your blog is at bull.bonbon.blog, with nothing to set up. You post in chat.bonbon.blog, and a second or two later the post is on your blog.
