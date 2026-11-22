@@ -15,7 +15,7 @@
 	<head>
 		<title>BonBon</title>
 		<dateCreated>Mon, 12 Oct 2026 16:14:47 GMT</dateCreated>
-		<dateModified>Fri, 20 Nov 2026 13:32:46 GMT</dateModified>
+		<dateModified>Sun, 22 Nov 2026 15:18:53 GMT</dateModified>
 		<ownerId>http://davewiner.com/</ownerId>
 		</head>
 	<body>
@@ -23,7 +23,7 @@
 			<outline text="{">
 				<outline text="&quot;name&quot;: &quot;mdbrowser&quot;,"/>
 				<outline text="&quot;productName&quot;: &quot;BonBon&quot;,"/>
-				<outline text="&quot;version&quot;: &quot;0.6.55&quot;,"/>
+				<outline text="&quot;version&quot;: &quot;0.6.56&quot;,"/>
 				<outline text="&quot;description&quot;: &quot;A browser for a web made of Markdown files.&quot;,"/>
 				<outline text="&quot;main&quot;: &quot;main.js&quot;,"/>
 				<outline text="&quot;scripts&quot;: {">
@@ -66,7 +66,8 @@
 					<outline text="&quot;text/javascript&quot;: &quot;js&quot;"/>
 					<outline text="},"/>
 					</outline>
-				<outline text="&quot;ctSecsHandlerTimeout&quot;: 5"/>
+				<outline text="&quot;ctSecsHandlerTimeout&quot;: 5,"/>
+				<outline text="&quot;flOpenPdfsInSystemViewer&quot;: false"/>
 				<outline text="}"/>
 				</outline>
 			</outline>
@@ -79,7 +80,7 @@
 				<outline text="page, and where the Markdown becomes HTML.  */"/>
 				</outline>
 			<outline text=""/>
-			<outline text="const {app, BrowserWindow, Menu, ipcMain, clipboard, shell} = require (&quot;electron&quot;);"/>
+			<outline text="const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net} = require (&quot;electron&quot;); //11/21/26 by CC -- net, Electron&apos;s own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js"/>
 			<outline text="const fs = require (&quot;fs&quot;);"/>
 			<outline text="const pathTool = require (&quot;path&quot;);"/>
 			<outline text="const pageRequests = require (&quot;./pageRequests.js&quot;); //11/2/26 by CC -- the requests, the charter&apos;s rules about what counts as a page, favicons and the table of contents; they were in this file until the demo&apos;s server needed the same code"/>
@@ -103,6 +104,7 @@
 					<outline text="},"/>
 					</outline>
 				<outline text="ctSecsHandlerTimeout: 5, //11/19/26 by CC -- how long a page handler has to answer before the page is shown without it"/>
+				<outline text="flOpenPdfsInSystemViewer: false, //11/21/26 by CC -- a PDF shows in the tab, as it does in the historic browsers; true hands it to the system&apos;s PDF viewer instead (Dave; the name is his to approve, and he did). There&apos;s no UI for it yet, it&apos;s set in config.json in the data folder"/>
 				<outline text="flCalendar: false //10/17/26 by CC -- the calendar beside the text when the site has a table of contents. 10/18: off by default and gone from the UI (Dave: &quot;reader-hostile&quot;); the code stays for when we come back to it"/>
 				<outline text="};"/>
 				</outline>
@@ -505,7 +507,7 @@
 						<outline text="submenu: bookmarksMenu"/>
 						<outline text="},"/>
 						</outline>
-					<outline text="{role: &quot;windowMenu&quot;}"/>
+					<outline text="(process.platform === &quot;darwin&quot;) ? {role: &quot;windowMenu&quot;} : {label: &quot;Window&quot;, submenu: [{role: &quot;minimize&quot;}, {role: &quot;zoom&quot;}]} //11/21/26 by CC -- CTRL+W OFF THE MAC (issue 3, John Evdemon, who found the cause and tested the cure on Windows 11): there Electron&apos;s Window menu has a Close item with the same key as Close Tab, and Close won, so Ctrl+W closed the whole window. The Mac&apos;s Window menu has no such item and stays as it was"/>
 					<outline text="];"/>
 					</outline>
 				<outline text="Menu.setApplicationMenu (Menu.buildFromTemplate (theTemplate));"/>
@@ -519,7 +521,8 @@
 					<outline text="titleBarStyle: &quot;hiddenInset&quot;, //10/12/26 by CC -- TABS IN THE TITLE BAR, Chrome&apos;s layout: the shell draws the tab strip where the title bar was, the address bar below it; the traffic lights stay, inset at the left of the strip"/>
 					<outline text="trafficLightPosition: {x: 14, y: 13},"/>
 					<outline text="webPreferences: {">
-						<outline text="preload: pathTool.join (__dirname, &quot;preload.js&quot;)"/>
+						<outline text="preload: pathTool.join (__dirname, &quot;preload.js&quot;),"/>
+						<outline text="plugins: true //11/21/26 by CC -- Chromium&apos;s PDF viewer, for a PDF shown in a tab"/>
 						<outline text="}"/>
 						</outline>
 					<outline text="};"/>
@@ -748,11 +751,77 @@
 				<outline text="});"/>
 				</outline>
 			<outline text=""/>
-			<outline text="ipcMain.handle (&quot;mdBrowser.getPage&quot;, function (event, theUrl) {">
+			<outline text="/*  11/21/26 by CC -- PDFS. A link to a PDF used to get the page that">
+				<outline text="offers a download (issue 9, Joseph Fieber). Dave: do what the"/>
+				<outline text="historic browsers do, show it in the tab, and have a pref that hands"/>
+				<outline text="it to the system&apos;s PDF viewer instead, flOpenPdfsInSystemViewer in"/>
+				<outline text="config.json. With the pref on, the PDF is saved in a BonBon folder"/>
+				<outline text="in the system&apos;s temporary folder and opened from there, and the"/>
+				<outline text="shell is told it was opened outside, so the tab stays on the page"/>
+				<outline text="it had, the way it does when a link opens in the historic browser.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function openPdfInSystemViewer (theResult, callback) { //callback (err)">
+				<outline text="var theName = &quot;document.pdf&quot;;"/>
+				<outline text="try {">
+					<outline text="const thePath = decodeURIComponent (new URL (theResult.url).pathname);"/>
+					<outline text="const theLast = thePath.substr (thePath.lastIndexOf (&quot;/&quot;) + 1).replace (/[^A-Za-z0-9._ -]/g, &quot;&quot;);"/>
+					<outline text="if (theLast.length &gt; 0) {">
+						<outline text="theName = (theLast.toLowerCase ().endsWith (&quot;.pdf&quot;)) ? theLast : theLast + &quot;.pdf&quot;;"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="catch (err) {">
+					<outline text="}"/>
+					</outline>
+				<outline text="const theFolder = pathTool.join (app.getPath (&quot;temp&quot;), &quot;BonBon&quot;), theFile = pathTool.join (theFolder, theName);"/>
+				<outline text="try {">
+					<outline text="fs.mkdirSync (theFolder, {recursive: true});"/>
+					<outline text="fs.writeFileSync (theFile, Buffer.from (theResult.pdfData.substr (theResult.pdfData.indexOf (&quot;,&quot;) + 1), &quot;base64&quot;));"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="catch (err) {">
+					<outline text="callback ({message: &quot;Can&apos;t open &quot; + theResult.url + &quot; in the system&apos;s PDF viewer because the file couldn&apos;t be saved: &quot; + err.message});"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="shell.openPath (theFile).then (function (theError) { //answers &quot;&quot; when it opened">
+					<outline text="if (theError.length &gt; 0) {">
+						<outline text="callback ({message: &quot;Can&apos;t open &quot; + theResult.url + &quot; in the system&apos;s PDF viewer because &quot; + theError + &quot;.&quot;});"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else {">
+						<outline text="callback (undefined);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="});"/>
+					</outline>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
+			<outline text="ipcMain.handle (&quot;mdBrowser.getPage&quot;, function (event, theUrl, flAsItCame) { //11/21/26: flAsItCame, for View Source, see getPage in pageRequests.js">
 				<outline text="return (new Promise (function (resolve) {">
 					<outline text="pageRequests.getPage (theUrl, function (theResult) {">
-						<outline text="pageHandlers.handlePage (theUrl, theResult, resolve); //11/19/26 by CC -- a page that isn&apos;t Markdown goes to its handler, if there&apos;s one for its extension"/>
-						<outline text="});"/>
+						<outline text="if (theResult.flOk &amp;&amp; (theResult.kind === &quot;pdf&quot;) &amp;&amp; config.flOpenPdfsInSystemViewer &amp;&amp; (flAsItCame !== true)) { //11/21/26 by CC">
+							<outline text="openPdfInSystemViewer (theResult, function (err) {">
+								<outline text="if (err) {">
+									<outline text="resolve ({flOk: false, url: theResult.url, status: 0, message: err.message});"/>
+									<outline text="}"/>
+									</outline>
+								<outline text="else {">
+									<outline text="resolve ({flOk: true, kind: &quot;openedOutside&quot;, url: theResult.url});"/>
+									<outline text="}"/>
+									</outline>
+								<outline text="});"/>
+								</outline>
+							<outline text="}"/>
+							</outline>
+						<outline text="else {">
+							<outline text="pageHandlers.handlePage (theUrl, theResult, resolve); //11/19/26 by CC -- a page that isn&apos;t Markdown goes to its handler, if there&apos;s one for its extension"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="}, flAsItCame === true);"/>
 						</outline>
 					<outline text="}));"/>
 					</outline>
@@ -835,7 +904,7 @@
 			<outline text=""/>
 			<outline text="app.whenReady ().then (function () {">
 				<outline text="readConfig ();"/>
-				<outline text="pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: &quot;Markdown Browser/&quot; + app.getVersion ()}); //11/2/26 by CC -- what the requests need from the app; the demo&apos;s server sets its own"/>
+				<outline text="pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: &quot;Markdown Browser/&quot; + app.getVersion (), electronNet: net}); //11/2/26 by CC -- what the requests need from the app; the demo&apos;s server sets its own"/>
 				<outline text="moveDataFromOldName ();"/>
 				<outline text="seedStylesheets (); //10/27/26 by CC"/>
 				<outline text="pageHandlers.init ({extensionsForTypes: config.extensionsForTypes, ctSecsHandlerTimeout: config.ctSecsHandlerTimeout}); //11/19/26 by CC"/>
@@ -889,7 +958,10 @@
 			<outline text="var options = {">
 				<outline text="maxRedirects: 10,"/>
 				<outline text="userAgent: &quot;Markdown Browser&quot;,"/>
-				<outline text="cacheMinutes: undefined //how long a site&apos;s icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs"/>
+				<outline text="cacheMinutes: undefined, //how long a site&apos;s icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs"/>
+				<outline text="electronNet: undefined, //11/21/26 by CC -- Electron&apos;s net module, when the caller is the app; requests are made with it, see WHOSE CERTIFICATES"/>
+				<outline text="maxTwinSearchBytes: 64 * 1024, //11/21/26 by CC -- how far into an HTML page isMarkdownUrl reads, looking for the line that names its Markdown copy"/>
+				<outline text="maxPdfBytes: 30 * 1024 * 1024 //11/21/26 by CC -- a PDF bigger than this isn&apos;t shown in the tab; it gets the page that offers the download"/>
 				<outline text="};"/>
 				</outline>
 			<outline text=""/>
@@ -939,8 +1011,10 @@
 				<outline text="they came.  */"/>
 				</outline>
 			<outline text=""/>
-			<outline text="function unzipBody (theBody, theContentEncoding, callback) { //calls back with the page&apos;s bytes, unzipped if the server said they were zipped">
+			<outline text="function unzipBody (theBody, theContentEncoding, callback, flCutShort=false) { //calls back with the page&apos;s bytes, unzipped if the server said they were zipped. 11/21/26: flCutShort, we stopped reading before the end (maxBodyBytes), so what&apos;s there is unzipped as far as it goes">
 				<outline text="const theEncoding = (theContentEncoding === undefined) ? &quot;&quot; : theContentEncoding.trim ().toLowerCase ();"/>
+				<outline text="const zlibOptions = (flCutShort) ? {finishFlush: zlib.constants.Z_SYNC_FLUSH} : {};"/>
+				<outline text="const brotliOptions = (flCutShort) ? {finishFlush: zlib.constants.BROTLI_OPERATION_FLUSH} : {};"/>
 				<outline text="function unzipped (err, theUnzippedBody) {">
 					<outline text="if (err) {">
 						<outline text="callback (theBody);"/>
@@ -954,13 +1028,13 @@
 					</outline>
 				<outline text="switch (theEncoding) {">
 					<outline text="case &quot;gzip&quot;: case &quot;x-gzip&quot;:">
-						<outline text="zlib.gunzip (theBody, unzipped);"/>
+						<outline text="zlib.gunzip (theBody, zlibOptions, unzipped);"/>
 						<outline text="break;"/>
 						</outline>
 					<outline text="case &quot;deflate&quot;:">
-						<outline text="zlib.inflate (theBody, function (err, theUnzippedBody) {">
+						<outline text="zlib.inflate (theBody, zlibOptions, function (err, theUnzippedBody) {">
 							<outline text="if (err) { //some servers send deflate without its wrapper">
-								<outline text="zlib.inflateRaw (theBody, unzipped);"/>
+								<outline text="zlib.inflateRaw (theBody, zlibOptions, unzipped);"/>
 								<outline text="}"/>
 								</outline>
 							<outline text="else {">
@@ -972,7 +1046,7 @@
 						<outline text="break;"/>
 						</outline>
 					<outline text="case &quot;br&quot;:">
-						<outline text="zlib.brotliDecompress (theBody, unzipped);"/>
+						<outline text="zlib.brotliDecompress (theBody, brotliOptions, unzipped);"/>
 						<outline text="break;"/>
 						</outline>
 					<outline text="default:">
@@ -983,7 +1057,44 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
-			<outline text="function httpGet (theUrl, ctRedirects, callback, acceptHeader=&quot;text/markdown&quot;, flHeadersOnly=false, isBodyWanted=undefined) { //10/17/26 by CC -- acceptHeader: what we&apos;re asking for; text/x-opml for the table of contents, so a server that wraps OPML in HTML (PagePark) sends the outline instead. 11/9/26: flHeadersOnly, for isMarkdownUrl: the answer is in the headers, so the connection is dropped once they&apos;re in and the body comes back empty; a link to an archive isn&apos;t downloaded to learn it isn&apos;t a page. 11/10/26: isBodyWanted (theUrl, contentType), for getPage: asked once the headers are in, and when it says no the body isn&apos;t read, so a 13 megabyte archive isn&apos;t downloaded to draw the page that offers it. Every answer has contentLocation, the address the server says the file it sent lives at (a folder&apos;s address answered with its readme), and contentLength">
+			<outline text="/*  11/21/26 by CC -- WHOSE CERTIFICATES. A page at stilles-coaching.ch">
+				<outline text="wouldn&apos;t load: &quot;self signed certificate in certificate chain&quot; (issue"/>
+				<outline text="10, wortgefecht). The certificate was fine. The requests were made"/>
+				<outline text="with the Node that&apos;s inside the app, which carries its own list of"/>
+				<outline text="the authorities it trusts, frozen when that Node was built, and the"/>
+				<outline text="site&apos;s authority (SSL.com&apos;s 2022 root) is newer than the list."/>
+				<outline text="Scott Hanson found the cause, and he and CC each tried the cure: in"/>
+				<outline text="the app the request is made by Electron&apos;s own network code (net),"/>
+				<outline text="the code Chrome uses, which trusts what the system trusts and is"/>
+				<outline text="kept current with it. A bad certificate is still refused."/>
+				<outline text=""/>
+				<outline text="The app hands net to init as electronNet. The demo&apos;s server runs in"/>
+				<outline text="plain Node, a current one, has no net, and asks the way it did."/>
+				<outline text=""/>
+				<outline text="What&apos;s different about net, all of it in requestWithElectron: it"/>
+				<outline text="unzips a zipped page itself; a header&apos;s value can be a list; a"/>
+				<outline text="redirect is an event, and we follow it ourselves so the count and"/>
+				<outline text="the final address are ours; and it keeps a cache, whose answers"/>
+				<outline text="come back in Electron 22 with no headers (Scott), so every request"/>
+				<outline text="says no-cache."/>
+				<outline text=""/>
+				<outline text="If net refuses a certificate the request is tried once more the old"/>
+				<outline text="way. On a Linux where Chromium can&apos;t find the system&apos;s authorities"/>
+				<outline text="that keeps every site from failing; Node&apos;s list is still a list.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function getPlainHeaders (theHeaders) { //net&apos;s headers, in the shape Node&apos;s have: names in lower case, a list of values joined into one">
+				<outline text="const plainHeaders = {};"/>
+				<outline text="for (var x in theHeaders) {">
+					<outline text="const theValue = theHeaders [x];"/>
+					<outline text="plainHeaders [x.toLowerCase ()] = (Array.isArray (theValue)) ? theValue.join (&quot;, &quot;) : theValue;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="return (plainHeaders);"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function httpGet (theUrl, ctRedirects, callback, acceptHeader=&quot;text/markdown&quot;, flHeadersOnly=false, isBodyWanted=undefined, maxBodyBytes=undefined) { //10/17/26 by CC -- acceptHeader: what we&apos;re asking for; text/x-opml for the table of contents, so a server that wraps OPML in HTML (PagePark) sends the outline instead. 11/9/26: flHeadersOnly, for isMarkdownUrl: the answer is in the headers, so the connection is dropped once they&apos;re in and the body comes back empty; a link to an archive isn&apos;t downloaded to learn it isn&apos;t a page. 11/10/26: isBodyWanted (theUrl, contentType, contentLength), for getPage: asked once the headers are in, and when it says no the body isn&apos;t read, so a 13 megabyte archive isn&apos;t downloaded to draw the page that offers it. Every answer has contentLocation, the address the server says the file it sent lives at (a folder&apos;s address answered with its readme), and contentLength. 11/21/26: maxBodyBytes, for isMarkdownUrl: reading stops there, and the answer&apos;s body is what had come">
 				<outline text="var parsedUrl;"/>
 				<outline text="try {">
 					<outline text="parsedUrl = new URL (theUrl);"/>
@@ -994,40 +1105,62 @@
 					<outline text="return;"/>
 					<outline text="}"/>
 					</outline>
-				<outline text="const theModule = (parsedUrl.protocol === &quot;https:&quot;) ? https : http;"/>
 				<outline text="if ((parsedUrl.protocol !== &quot;https:&quot;) &amp;&amp; (parsedUrl.protocol !== &quot;http:&quot;)) {">
 					<outline text="callback ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because only http and https are supported.&quot;});"/>
 					<outline text="return;"/>
 					<outline text="}"/>
 					</outline>
-				<outline text="const theOptions = {">
-					<outline text="headers: {">
-						<outline text="&quot;Accept&quot;: acceptHeader,"/>
-						<outline text="&quot;User-Agent&quot;: options.userAgent"/>
-						<outline text="}"/>
-						</outline>
+				<outline text="const theHeaders = {">
+					<outline text="&quot;Accept&quot;: acceptHeader,"/>
+					<outline text="&quot;User-Agent&quot;: options.userAgent"/>
 					<outline text="};"/>
 					</outline>
-				<outline text="const theRequest = theModule.get (theUrl, theOptions, function (theResponse) {">
-					<outline text="const theStatus = theResponse.statusCode;"/>
-					<outline text="if ((theStatus &gt;= 300) &amp;&amp; (theStatus &lt; 400) &amp;&amp; (theResponse.headers.location !== undefined)) {">
-						<outline text="theResponse.resume ();"/>
-						<outline text="if (ctRedirects &gt;= options.maxRedirects) {">
-							<outline text="callback ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because there were too many redirects.&quot;});"/>
+				<outline text="var flAnswered = false; //one answer per request, whatever the connection does after we&apos;ve stopped reading it"/>
+				<outline text="function answer (err, theAnswer) {">
+					<outline text="if (!flAnswered) {">
+						<outline text="flAnswered = true;"/>
+						<outline text="callback (err, theAnswer);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="function followRedirect (theLocation) {">
+					<outline text="if (flAnswered) {">
+						<outline text="return;"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="if (ctRedirects &gt;= options.maxRedirects) {">
+						<outline text="answer ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because there were too many redirects.&quot;});"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else {">
+						<outline text="var urlRedirect;"/>
+						<outline text="try {">
+							<outline text="urlRedirect = new URL (theLocation, theUrl).toString ();"/>
 							<outline text="}"/>
 							</outline>
-						<outline text="else {">
-							<outline text="const urlRedirect = new URL (theResponse.headers.location, theUrl).toString ();"/>
-							<outline text="httpGet (urlRedirect, ctRedirects + 1, callback, acceptHeader, flHeadersOnly, isBodyWanted);"/>
+						<outline text="catch (err) {">
+							<outline text="answer ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because it redirects to an address that isn&apos;t a valid URL.&quot;});"/>
+							<outline text="return;"/>
 							<outline text="}"/>
 							</outline>
+						<outline text="flAnswered = true; //the answer is the redirect&apos;s"/>
+						<outline text="httpGet (urlRedirect, ctRedirects + 1, callback, acceptHeader, flHeadersOnly, isBodyWanted, maxBodyBytes);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="function gotResponse (theStatus, theStatusMessage, responseHeaders, theStream, stopReading, flAlreadyUnzipped) { //the headers are in; theStream gives the body, stopReading drops the connection">
+					<outline text="if ((theStatus &gt;= 300) &amp;&amp; (theStatus &lt; 400) &amp;&amp; (responseHeaders.location !== undefined)) {">
+						<outline text="stopReading ();"/>
+						<outline text="followRedirect (responseHeaders.location);"/>
 						<outline text="return;"/>
 						<outline text="}"/>
 						</outline>
 					<outline text="var contentLocation; //11/10/26 by CC -- the standard header, made absolute"/>
-					<outline text="if (theResponse.headers [&quot;content-location&quot;] !== undefined) {">
+					<outline text="if (responseHeaders [&quot;content-location&quot;] !== undefined) {">
 						<outline text="try {">
-							<outline text="contentLocation = new URL (theResponse.headers [&quot;content-location&quot;], theUrl).toString ();"/>
+							<outline text="contentLocation = new URL (responseHeaders [&quot;content-location&quot;], theUrl).toString ();"/>
 							<outline text="}"/>
 							</outline>
 						<outline text="catch (err) {">
@@ -1035,13 +1168,13 @@
 							</outline>
 						<outline text="}"/>
 						</outline>
-					<outline text="const contentLength = (theResponse.headers [&quot;content-length&quot;] === undefined) ? undefined : Number (theResponse.headers [&quot;content-length&quot;]);"/>
-					<outline text="if (flHeadersOnly || ((isBodyWanted !== undefined) &amp;&amp; (theStatus === 200) &amp;&amp; !isBodyWanted (theUrl, theResponse.headers [&quot;content-type&quot;]))) { //11/9/26 by CC">
-						<outline text="theResponse.destroy ();"/>
-						<outline text="callback (undefined, {">
+					<outline text="const contentLength = (responseHeaders [&quot;content-length&quot;] === undefined) ? undefined : Number (responseHeaders [&quot;content-length&quot;]);"/>
+					<outline text="if (flHeadersOnly || ((isBodyWanted !== undefined) &amp;&amp; (theStatus === 200) &amp;&amp; !isBodyWanted (theUrl, responseHeaders [&quot;content-type&quot;], contentLength))) { //11/9/26 by CC">
+						<outline text="stopReading ();"/>
+						<outline text="answer (undefined, {">
 							<outline text="url: theUrl,"/>
 							<outline text="status: theStatus,"/>
-							<outline text="contentType: theResponse.headers [&quot;content-type&quot;],"/>
+							<outline text="contentType: responseHeaders [&quot;content-type&quot;],"/>
 							<outline text="contentLocation,"/>
 							<outline text="contentLength,"/>
 							<outline text="body: Buffer.alloc (0)"/>
@@ -1051,32 +1184,126 @@
 						<outline text="}"/>
 						</outline>
 					<outline text="const theChunks = [];"/>
-					<outline text="theResponse.on (&quot;data&quot;, function (theChunk) {">
-						<outline text="theChunks.push (theChunk);"/>
-						<outline text="});"/>
-						</outline>
-					<outline text="theResponse.on (&quot;end&quot;, function () {">
-						<outline text="unzipBody (Buffer.concat (theChunks), theResponse.headers [&quot;content-encoding&quot;], function (theBody) { //11/18/26 by CC">
-							<outline text="callback (undefined, {">
+					<outline text="var ctBytes = 0, flFinished = false;"/>
+					<outline text="function finish (flCutShort) {">
+						<outline text="if (flFinished) {">
+							<outline text="return;"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="flFinished = true;"/>
+						<outline text="unzipBody (Buffer.concat (theChunks), (flAlreadyUnzipped) ? undefined : responseHeaders [&quot;content-encoding&quot;], function (theBody) { //11/18/26 by CC">
+							<outline text="answer (undefined, {">
 								<outline text="url: theUrl,"/>
 								<outline text="status: theStatus,"/>
-								<outline text="statusMessage: theResponse.statusMessage, //11/12/26 by CC -- the server&apos;s words for the status, &quot;Not Found&quot;; see getServerErrorMessage"/>
-								<outline text="contentType: theResponse.headers [&quot;content-type&quot;],"/>
-								<outline text="headers: theResponse.headers, //11/19/26 by CC -- everything the server said, for a page handler&apos;s options"/>
+								<outline text="statusMessage: theStatusMessage, //11/12/26 by CC -- the server&apos;s words for the status, &quot;Not Found&quot;; see getServerErrorMessage"/>
+								<outline text="contentType: responseHeaders [&quot;content-type&quot;],"/>
+								<outline text="headers: responseHeaders, //11/19/26 by CC -- everything the server said, for a page handler&apos;s options"/>
 								<outline text="contentLocation,"/>
 								<outline text="contentLength,"/>
 								<outline text="body: theBody //10/12/26 by CC -- a Buffer, not a string: a favicon is binary; a page&apos;s text is body.toString ()"/>
 								<outline text="});"/>
 								</outline>
-							<outline text="});"/>
+							<outline text="}, flCutShort);"/>
+							</outline>
+						<outline text="}"/>
+						</outline>
+					<outline text="theStream.on (&quot;data&quot;, function (theChunk) {">
+						<outline text="if (!flFinished) {">
+							<outline text="theChunks.push (theChunk);"/>
+							<outline text="ctBytes += theChunk.length;"/>
+							<outline text="if ((maxBodyBytes !== undefined) &amp;&amp; (ctBytes &gt;= maxBodyBytes)) { //11/21/26 by CC">
+								<outline text="finish (true);"/>
+								<outline text="stopReading ();"/>
+								<outline text="}"/>
+								</outline>
+							<outline text="}"/>
 							</outline>
 						<outline text="});"/>
 						</outline>
-					<outline text="});"/>
+					<outline text="theStream.on (&quot;end&quot;, function () {">
+						<outline text="finish (false);"/>
+						<outline text="});"/>
+						</outline>
+					<outline text="theStream.on (&quot;error&quot;, function (err) {">
+						<outline text="if (!flFinished) {">
+							<outline text="flFinished = true;"/>
+							<outline text="answer ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because &quot; + err.message + &quot;.&quot;});"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					<outline text="}"/>
 					</outline>
-				<outline text="theRequest.on (&quot;error&quot;, function (err) {">
-					<outline text="callback ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because &quot; + err.message + &quot;.&quot;});"/>
-					<outline text="});"/>
+				<outline text="function requestWithNode () {">
+					<outline text="const theModule = (parsedUrl.protocol === &quot;https:&quot;) ? https : http;"/>
+					<outline text="const theRequest = theModule.get (theUrl, {headers: theHeaders}, function (theResponse) {">
+						<outline text="gotResponse (theResponse.statusCode, theResponse.statusMessage, theResponse.headers, theResponse, function () {">
+							<outline text="theResponse.destroy ();"/>
+							<outline text="}, false);"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					<outline text="theRequest.on (&quot;error&quot;, function (err) {">
+						<outline text="answer ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because &quot; + err.message + &quot;.&quot;});"/>
+						<outline text="});"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="function requestWithElectron () { //11/21/26 by CC -- see WHOSE CERTIFICATES above">
+					<outline text="var theRequest, flStopped = false; //flStopped: we dropped the connection ourselves, and what it says about that isn&apos;t an error"/>
+					<outline text="try {">
+						<outline text="theRequest = options.electronNet.request ({url: theUrl, redirect: &quot;manual&quot;});"/>
+						<outline text="for (var x in theHeaders) {">
+							<outline text="theRequest.setHeader (x, theHeaders [x]);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="theRequest.setHeader (&quot;Cache-Control&quot;, &quot;no-cache&quot;);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="catch (err) {">
+						<outline text="requestWithNode ();"/>
+						<outline text="return;"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="theRequest.on (&quot;redirect&quot;, function (theStatus, theMethod, urlRedirect) {">
+						<outline text="flStopped = true;"/>
+						<outline text="theRequest.abort ();"/>
+						<outline text="followRedirect (urlRedirect);"/>
+						<outline text="});"/>
+						</outline>
+					<outline text="theRequest.on (&quot;response&quot;, function (theResponse) {">
+						<outline text="gotResponse (theResponse.statusCode, theResponse.statusMessage, getPlainHeaders (theResponse.headers), theResponse, function () {">
+							<outline text="flStopped = true;"/>
+							<outline text="theRequest.abort ();"/>
+							<outline text="}, true);"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					<outline text="theRequest.on (&quot;error&quot;, function (err) {">
+						<outline text="if (!flStopped) {">
+							<outline text="flStopped = true;"/>
+							<outline text="if (err.message.indexOf (&quot;ERR_CERT&quot;) !== -1) { //net won&apos;t take the certificate; ask once more the old way">
+								<outline text="requestWithNode ();"/>
+								<outline text="}"/>
+								</outline>
+							<outline text="else {">
+								<outline text="answer ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because &quot; + err.message + &quot;.&quot;});"/>
+								<outline text="}"/>
+								</outline>
+							<outline text="}"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					<outline text="theRequest.end ();"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="if (options.electronNet === undefined) {">
+					<outline text="requestWithNode ();"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="else {">
+					<outline text="requestWithElectron ();"/>
+					<outline text="}"/>
 					</outline>
 				<outline text="}"/>
 				</outline>
@@ -1116,7 +1343,7 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
-			<outline text="function getPageKind (theUrl, theContentType) { //10/27/26 by CC -- what a non-Markdown answer is, when it&apos;s something we show: &quot;html&quot;, &quot;xml&quot;, &quot;image&quot;, &quot;text&quot;, or undefined"/>
+			<outline text="function getPageKind (theUrl, theContentType) { //10/27/26 by CC -- what a non-Markdown answer is, when it&apos;s something we show: &quot;html&quot;, &quot;xml&quot;, &quot;image&quot;, &quot;pdf&quot;, &quot;text&quot;, or undefined"/>
 			<outline text="">
 				<outline text="/*  Dave, 10/27: a link to an HTML page shows the page&apos;s source, the">
 					<outline text="mirror of what Chrome does with a link to a Markdown file. Not the"/>
@@ -1172,6 +1399,10 @@
 					<outline text="return (&quot;image&quot;);"/>
 					<outline text="}"/>
 					</outline>
+				<outline text="if ((theType === &quot;application/pdf&quot;) || hasExtension ([&quot;.pdf&quot;])) { //11/21/26 by CC -- shown in the tab, the way the historic browsers show one">
+					<outline text="return (&quot;pdf&quot;);"/>
+					<outline text="}"/>
+					</outline>
 				<outline text="if ((theType.indexOf (&quot;text/&quot;) === 0) || (theType === &quot;application/json&quot;) || (theType === &quot;application/javascript&quot;) || (theType === &quot;application/x-javascript&quot;) || (theType === &quot;application/yaml&quot;) || hasExtension ([&quot;.txt&quot;, &quot;.js&quot;, &quot;.css&quot;, &quot;.json&quot;, &quot;.yaml&quot;, &quot;.yml&quot;, &quot;.py&quot;, &quot;.sh&quot;, &quot;.c&quot;, &quot;.h&quot;, &quot;.php&quot;, &quot;.rb&quot;, &quot;.go&quot;, &quot;.rs&quot;, &quot;.java&quot;, &quot;.ts&quot;, &quot;.sql&quot;, &quot;.csv&quot;, &quot;.ini&quot;, &quot;.toml&quot;])) { //11/10/26 by CC">
 					<outline text="return (&quot;text&quot;);"/>
 					<outline text="}"/>
@@ -1206,6 +1437,69 @@
 					</outline>
 				<outline text="const theTitle = theMatch [1].replace (/\s+/g, &quot; &quot;).trim ();"/>
 				<outline text="return ((theTitle.length === 0) ? undefined : theTitle);"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
+			<outline text="/*  11/21/26 by CC -- THE MARKDOWN COPY. A site on GitHub Pages can&apos;t">
+				<outline text="answer our request for Markdown: the server is static and doesn&apos;t"/>
+				<outline text="look at Accept, so the site&apos;s address gives HTML, and the Markdown"/>
+				<outline text="file sits beside it unseen (issue 6, ludwa6; rsdoiel said the same)."/>
+				<outline text="What such a site can do is name the copy in the page, with a line"/>
+				<outline text="the web has had for years, the one that points at a page&apos;s feed:"/>
+				<outline text="">
+					<outline text="&lt;link rel=&quot;alternate&quot; type=&quot;text/markdown&quot; href=&quot;index.md&quot;&gt;"/>
+					</outline>
+				<outline text=""/>
+				<outline text="When an answer is HTML we look for that line in the page&apos;s head."/>
+				<outline text="If it&apos;s there and the address it names serves Markdown, that&apos;s the"/>
+				<outline text="page, as if the reader had typed its address (Dave: the address bar"/>
+				<outline text="shows the Markdown file&apos;s address). If it isn&apos;t there, or the"/>
+				<outline text="address doesn&apos;t pan out, the answer is the HTML, as before.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function getMarkdownTwinUrl (htmltext, urlPage) { //the address the page&apos;s head names as its Markdown copy, made whole; undefined when it names none">
+				<outline text="const ixBody = htmltext.search (/&lt;body[\s&gt;]/i);"/>
+				<outline text="const theHead = (ixBody === -1) ? htmltext : htmltext.substr (0, ixBody);"/>
+				<outline text="const theTags = theHead.match (/&lt;link\b[^&gt;]*&gt;/gi);"/>
+				<outline text="var urlTwin;"/>
+				<outline text="function getAttribute (theTag, theName) {">
+					<outline text="const theMatch = theTag.match (new RegExp (&quot;\\s&quot; + theName + &quot;\\s*=\\s*(?:\&quot;([^\&quot;]*)\&quot;|&apos;([^&apos;]*)&apos;|([^\\s&gt;]+))&quot;, &quot;i&quot;));"/>
+					<outline text="if (theMatch === null) {">
+						<outline text="return (undefined);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="const theValue = (theMatch [1] !== undefined) ? theMatch [1] : (theMatch [2] !== undefined) ? theMatch [2] : theMatch [3];"/>
+					<outline text="return (theValue.replace (/&amp;amp;/g, &quot;&amp;&quot;).trim ());"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="if (theTags !== null) {">
+					<outline text="theTags.forEach (function (theTag) {">
+						<outline text="if (urlTwin === undefined) {">
+							<outline text="const theRel = getAttribute (theTag, &quot;rel&quot;), theType = getAttribute (theTag, &quot;type&quot;), theHref = getAttribute (theTag, &quot;href&quot;);"/>
+							<outline text="if ((theRel !== undefined) &amp;&amp; (theType !== undefined) &amp;&amp; (theHref !== undefined) &amp;&amp; (theHref.length &gt; 0)) {">
+								<outline text="if ((theRel.toLowerCase ().split (/\s+/).indexOf (&quot;alternate&quot;) !== -1) &amp;&amp; (theType.toLowerCase () === &quot;text/markdown&quot;)) {">
+									<outline text="try {">
+										<outline text="const theUrl = new URL (theHref, urlPage).toString ();"/>
+										<outline text="if (theUrl !== urlPage) {">
+											<outline text="urlTwin = theUrl;"/>
+											<outline text="}"/>
+											</outline>
+										<outline text="}"/>
+										</outline>
+									<outline text="catch (err) {">
+										<outline text="}"/>
+										</outline>
+									<outline text="}"/>
+									</outline>
+								<outline text="}"/>
+								</outline>
+							<outline text="}"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="return (urlTwin);"/>
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
@@ -1249,7 +1543,7 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
-			<outline text="function getPage (theUrl, callback) { //answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind &quot;file&quot; {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder&apos;s address in the site&apos;s table of contents by its readme&apos;s">
+			<outline text="function getPage (theUrl, callback, flAsItCame=false) { //11/21/26: flAsItCame, for View Source: an HTML page is answered as the HTML, its Markdown copy isn&apos;t looked for. Answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind &quot;file&quot; {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder&apos;s address in the site&apos;s table of contents by its readme&apos;s">
 				<outline text=""/>
 				<outline text="/*  11/17/26 by CC -- NOT ACCEPTABLE. We ask every server for Markdown.">
 					<outline text="Most that have only HTML send it anyway, and a clicked link to it"/>
@@ -1262,8 +1556,18 @@
 					</outline>
 				<outline text=""/>
 				<outline text="const acceptForPage = &quot;text/markdown, text/x-opml&quot;, acceptForAnything = &quot;*/*&quot;;"/>
-				<outline text="function isBodyWantedForPage (urlAnswered, theContentType) { //11/10/26 by CC -- the body is read only for what we draw">
-					<outline text="return (isMarkdownPage (urlAnswered, theContentType) || (getPageKind (urlAnswered, theContentType) !== undefined));"/>
+				<outline text="var flTwinTried = false; //11/21/26 by CC"/>
+				<outline text="function isBodyWantedForPage (urlAnswered, theContentType, theContentLength) { //11/10/26 by CC -- the body is read only for what we draw">
+					<outline text="if (isMarkdownPage (urlAnswered, theContentType)) {">
+						<outline text="return (true);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="const theKind = getPageKind (urlAnswered, theContentType);"/>
+					<outline text="if (theKind === &quot;pdf&quot;) { //11/21/26 by CC -- a very big one isn&apos;t read; it gets the page that offers the download">
+						<outline text="return ((theContentLength === undefined) || (theContentLength &lt;= options.maxPdfBytes));"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="return (theKind !== undefined);"/>
 					<outline text="}"/>
 					</outline>
 				<outline text="function askForPage (urlToGet, acceptHeader) {">
@@ -1300,7 +1604,27 @@
 								<outline text="const theKind = getPageKind (theResponse.url, theResponse.contentType); //10/27/26 by CC -- html and xml: the source, shown as text; image: the picture, as a data URL, the way favicons travel"/>
 								<outline text="if (theKind === &quot;html&quot;) {">
 									<outline text="const htmltext = theResponse.body.toString ();"/>
-									<outline text="callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: getHtmlTitle (htmltext), source: htmltext, contentType: theResponse.contentType, headers: theResponse.headers}); //11/19/26 by CC -- contentType and headers, here and in the next answer, for page handlers; see pageHandlers.js in the app"/>
+									<outline text="const htmlAnswer = {flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: getHtmlTitle (htmltext), source: htmltext, contentType: theResponse.contentType, headers: theResponse.headers}; //11/19/26 by CC -- contentType and headers, here and in the next answer, for page handlers; see pageHandlers.js in the app"/>
+									<outline text="const urlTwin = (flAsItCame || flTwinTried) ? undefined : getMarkdownTwinUrl (htmltext, theResponse.url); //11/21/26 by CC -- THE MARKDOWN COPY"/>
+									<outline text="if (urlTwin === undefined) {">
+										<outline text="callback (htmlAnswer);"/>
+										<outline text="}"/>
+										</outline>
+									<outline text="else {">
+										<outline text="flTwinTried = true; //once; a copy that names a copy isn&apos;t followed"/>
+										<outline text="httpGet (urlTwin, 0, function (err, twinResponse) {">
+											<outline text="if ((!err) &amp;&amp; (twinResponse.status === 200) &amp;&amp; isMarkdownPage (twinResponse.url, twinResponse.contentType)) {">
+												<outline text="gotResponse (undefined, twinResponse);"/>
+												<outline text="}"/>
+												</outline>
+											<outline text="else {">
+												<outline text="callback (htmlAnswer);"/>
+												<outline text="}"/>
+												</outline>
+											<outline text="}, acceptForPage, false, isBodyWantedForPage);"/>
+											</outline>
+										<outline text="}"/>
+										</outline>
 									<outline text="}"/>
 									</outline>
 								<outline text="else if ((theKind === &quot;xml&quot;) || (theKind === &quot;text&quot;)) {">
@@ -1309,6 +1633,10 @@
 									</outline>
 								<outline text="else if (theKind === &quot;image&quot;) {">
 									<outline text="callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, imageData: &quot;data:&quot; + getImageTypeForKind (theResponse.url, theResponse.contentType) + &quot;;base64,&quot; + theResponse.body.toString (&quot;base64&quot;)});"/>
+									<outline text="}"/>
+									</outline>
+								<outline text="else if ((theKind === &quot;pdf&quot;) &amp;&amp; (theResponse.body.length &gt; 0)) { //11/21/26 by CC -- the PDF&apos;s bytes, as a data URL, the way a picture travels; the shell shows it in the tab">
+									<outline text="callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, pdfData: &quot;data:application/pdf;base64,&quot; + theResponse.body.toString (&quot;base64&quot;)});"/>
 									<outline text="}"/>
 									</outline>
 								<outline text="else { //11/10/26 by CC -- anything else is a file to download; it was the charter&apos;s 406 page. The body wasn&apos;t read, see isBodyWanted">
@@ -1623,11 +1951,39 @@
 					<outline text="return;"/>
 					<outline text="}"/>
 					</outline>
-				<outline text="httpGet (theUrl, 0, function (err, theResponse) {">
-					<outline text="const flMarkdown = (!err) &amp;&amp; (theResponse.status === 200) &amp;&amp; isMarkdownPage (theResponse.url, theResponse.contentType);"/>
+				<outline text="function gotAnswer (flMarkdown) {">
 					<outline text="setCached (markdownUrlAnswers, theUrl, flMarkdown);"/>
 					<outline text="callback (flMarkdown);"/>
-					<outline text="}, &quot;text/markdown&quot;, true); //11/9/26 by CC -- headers only: the demo asks about every link on a page as it&apos;s drawn"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="httpGet (theUrl, 0, function (err, theResponse) {">
+					<outline text="if (err || (theResponse.status !== 200)) {">
+						<outline text="gotAnswer (false);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else if (isMarkdownPage (theResponse.url, theResponse.contentType)) {">
+						<outline text="gotAnswer (true);"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else { //11/21/26 by CC -- THE MARKDOWN COPY: an HTML page that names a Markdown copy is a page we can show, so the answer is yes when the copy is there">
+						<outline text="const urlTwin = (getPageKind (theResponse.url, theResponse.contentType) === &quot;html&quot;) ? getMarkdownTwinUrl (theResponse.body.toString (), theResponse.url) : undefined;"/>
+						<outline text="if (urlTwin === undefined) {">
+							<outline text="gotAnswer (false);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="else {">
+							<outline text="httpGet (urlTwin, 0, function (err, twinResponse) {">
+								<outline text="gotAnswer ((!err) &amp;&amp; (twinResponse.status === 200) &amp;&amp; isMarkdownPage (twinResponse.url, twinResponse.contentType));"/>
+								<outline text="}, &quot;text/markdown&quot;, true);"/>
+								</outline>
+							<outline text="}"/>
+							</outline>
+						<outline text="}"/>
+						</outline>
+					<outline text="}, &quot;text/markdown&quot;, false, function (urlAnswered, theContentType) { //11/9/26 by CC -- headers only: the demo asks about every link on a page as it&apos;s drawn. 11/21/26: and for an HTML page, the top of it, where the line naming its Markdown copy would be">
+						<outline text="return (getPageKind (urlAnswered, theContentType) === &quot;html&quot;);"/>
+						<outline text="}, options.maxTwinSearchBytes);"/>
+						</outline>
 					</outline>
 				<outline text="}"/>
 				</outline>
@@ -1657,6 +2013,7 @@
 			<outline text="exports.init = init;"/>
 			<outline text="exports.httpGet = httpGet;"/>
 			<outline text="exports.isMarkdownPage = isMarkdownPage;"/>
+			<outline text="exports.getMarkdownTwinUrl = getMarkdownTwinUrl; //11/21/26 by CC"/>
 			<outline text="exports.getPageKind = getPageKind;"/>
 			<outline text="exports.getPage = getPage;"/>
 			<outline text="exports.getFavicon = getFavicon;"/>
@@ -2342,8 +2699,8 @@
 					<outline text="return (ipcRenderer.invoke (&quot;mdBrowser.getFavicon&quot;, theUrl));"/>
 					<outline text="},"/>
 					</outline>
-				<outline text="getPage: function (theUrl) { //answers {flOk, url, frontMatter, html, source} or {flOk: false, url, status, message}">
-					<outline text="return (ipcRenderer.invoke (&quot;mdBrowser.getPage&quot;, theUrl));"/>
+				<outline text="getPage: function (theUrl, flAsItCame) { //answers {flOk, url, frontMatter, html, source} or {flOk: false, url, status, message}. 11/21/26: flAsItCame, for View Source: an HTML page comes back as the HTML, its Markdown copy isn&apos;t looked for">
+					<outline text="return (ipcRenderer.invoke (&quot;mdBrowser.getPage&quot;, theUrl, flAsItCame));"/>
 					<outline text="},"/>
 					</outline>
 				<outline text="openInBrowser: function (theUrl) { //11/12/26 by CC -- the address opens in the reader&apos;s default browser; for a link to an HTML page">
@@ -2940,7 +3297,7 @@
 				<outline text="word-break: break-word;"/>
 				<outline text="}"/>
 				</outline>
-			<outline text="body.sourceShowing .page, body.imageShowing .page { /* the stylesheet&apos;s column gives way: the whole window */">
+			<outline text="body.sourceShowing .page, body.imageShowing .page, body.pdfShowing .page { /* the stylesheet&apos;s column gives way: the whole window */">
 				<outline text="max-width: none;"/>
 				<outline text="margin: 0;"/>
 				<outline text="padding: 0;"/>
@@ -2967,7 +3324,7 @@
 				<outline text="white-space: inherit;"/>
 				<outline text="}"/>
 				</outline>
-			<outline text="body.sourceShowing .divPageHeader, body.imageShowing .divPageHeader { /* 11/10/26 by CC -- it was hidden; a listing or a picture that&apos;s a line in the site&apos;s table of contents has the arrows in it, at the right edge of the window. Empty, it&apos;s hidden like any empty header */">
+			<outline text="body.sourceShowing .divPageHeader, body.imageShowing .divPageHeader, body.pdfShowing .divPageHeader { /* 11/10/26 by CC -- it was hidden; a listing or a picture that&apos;s a line in the site&apos;s table of contents has the arrows in it, at the right edge of the window. Empty, it&apos;s hidden like any empty header */">
 				<outline text="margin: 0;"/>
 				<outline text="padding: 4px 16px 0 16px;"/>
 				<outline text="}"/>
@@ -2981,6 +3338,17 @@
 				<outline text="font-size: 64px;"/>
 				<outline text="color: #999;"/>
 				<outline text="margin-bottom: 24px;"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=".divPdfView { /* 11/21/26 by CC -- a PDF, in a frame that fills the window below the chrome; Chromium&apos;s PDF viewer draws it and has its own scrolling */">
+				<outline text="height: calc(100vh - var(--chromeHeight, 115px));"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=".divPdfView .iframePdf {">
+				<outline text="display: block;"/>
+				<outline text="width: 100%;"/>
+				<outline text="height: 100%;"/>
+				<outline text="border: 0;"/>
 				<outline text="}"/>
 				</outline>
 			<outline text=".divImageView { /* 10/27/26 by CC -- a picture a link led to, Chrome&apos;s way: alone, centered in the window below the chrome, at its own size, shrunk to fit when it&apos;s bigger (Dave) */">
@@ -3190,7 +3558,7 @@
 				<outline text="margin: 0;"/>
 				<outline text="}"/>
 				</outline>
-			<outline text="body.sourceShowing .divPageHeader &gt; .divPageArrows, body.imageShowing .divPageHeader &gt; .divPageArrows { /* over a listing or a picture they have a line to themselves, at the right; a listing beside a float would be narrowed all the way down */">
+			<outline text="body.sourceShowing .divPageHeader &gt; .divPageArrows, body.imageShowing .divPageHeader &gt; .divPageArrows, body.pdfShowing .divPageHeader &gt; .divPageArrows { /* over a listing or a picture they have a line to themselves, at the right; a listing beside a float would be narrowed all the way down */">
 				<outline text="float: none;"/>
 				<outline text="display: block;"/>
 				<outline text="margin: 0 0 4px 0;"/>
@@ -3615,6 +3983,16 @@
 				</outline>
 			<outline text=".divTabBar, .divAddressBar, .divBookmarksBar, .divPageHeader, .divPageArrows, .divPage {">
 				<outline text="outline: var(--devOutline);"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
+			<outline text="/* 11/21/26 by CC -- THE INTERFACE&apos;S OWN TEXT COLOR. With the system in dark mode the words in the three-dots menu and in the dialogs could barely be read (issue 2, Joseph Fieber). The page&apos;s stylesheet is linked into this one document, and in dark mode it turns the body&apos;s text light; the menu and the dialogs are white and never said what color their own words are, so they took the body&apos;s: light on white. Now they say. This is the small cure (Dave: &quot;it will be appreciated by the user&quot;): the interface stays light, and its words stay dark, whatever the stylesheet does. A dark interface, and a page that can&apos;t reach the interface at all, are other items */"/>
+			<outline text=".divMoreMenu, .divStylesheetsPanel, .divTypeahead, .divFindBar, .divSearchBar, .divLinkStatus {">
+				<outline text="color: #222;"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=".modal, .modal .divPrompt, .dropdown-menu { /* the dialogs and menus that come from Dave&apos;s includes, which are Bootstrap&apos;s: its own text color */">
+				<outline text="color: #333;"/>
 				<outline text="}"/>
 				</outline>
 			</outline>
@@ -4511,15 +4889,36 @@
 					<outline text="the image taken out of the line and floated at the right margin,"/>
 					<outline text="with scripting.com&apos;s padding. A paragraph that is only an image is"/>
 					<outline text="left alone; that&apos;s a picture, not a margin image. The alt text is"/>
-					<outline text="the Markdown&apos;s.  */"/>
+					<outline text="the Markdown&apos;s."/>
 					</outline>
-				<outline text=""/>
+				</outline>
+			<outline text="">
+				<outline text="	11/21/26 by CC -- PLAIN WORDS AFTER THE PICTURE. Joseph Fieber&apos;s">
+					<outline text="home page: a picture, then a paragraph of words with no link or"/>
+					<outline text="bold in it, and the picture stayed in the line (issue 11). The"/>
+					<outline text="stylesheets tell a picture standing alone from a margin image"/>
+					<outline text="with img:only-child, which counts elements, not words, so a"/>
+					<outline text="picture with only words after it looked like one standing alone."/>
+					<outline text="Dave&apos;s paragraphs nearly always have a link, so it never showed."/>
+					<outline text="The cure is here and not in the stylesheets, because a reader&apos;s"/>
+					<outline text="stylesheets are copies in the data folder that a new version"/>
+					<outline text="never replaces: when the words after the picture have no element"/>
+					<outline text="among them, an empty span goes at the end of the paragraph, and"/>
+					<outline text="the picture isn&apos;t the only child any more. Every stylesheet, an"/>
+					<outline text="edited one too, then does what it does for Dave&apos;s paragraphs.  */"/>
+					</outline>
+				</outline>
+			<outline text="">
 				<outline text="divPage.querySelectorAll (&quot;p&quot;).forEach (function (theParagraph) {">
 					<outline text="const theFirst = theParagraph.firstElementChild;"/>
 					<outline text="if ((theFirst !== null) &amp;&amp; (theFirst.tagName === &quot;IMG&quot;) &amp;&amp; (theFirst === theParagraph.firstChild)) {">
 						<outline text="const theText = theParagraph.textContent.trim ();"/>
 						<outline text="if (theText.length &gt; 0) {">
 							<outline text="theFirst.classList.add (&quot;imgRightMargin&quot;);"/>
+							<outline text="if (theParagraph.children.length === 1) { //11/21/26 by CC">
+								<outline text="theParagraph.appendChild (document.createElement (&quot;span&quot;));"/>
+								<outline text="}"/>
+								</outline>
 							<outline text="}"/>
 							</outline>
 						<outline text="}"/>
@@ -4990,6 +5389,42 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
+			<outline text="/*  11/21/26 by CC -- A PDF IN THE TAB. The PDF&apos;s bytes come from the app">
+				<outline text="as a data URL, the way a picture&apos;s do. They go in a blob, and the tab"/>
+				<outline text="shows the blob in a frame, where Chromium&apos;s own PDF viewer draws it,"/>
+				<outline text="the one Chrome uses. The frame fills the window below the chrome."/>
+				<outline text="The blob is let go when the tab moves on to another page or closes.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function getPdfBlobUrl (pdfData) { //the data URL&apos;s bytes as a blob; answers the blob&apos;s address">
+				<outline text="const theChars = atob (pdfData.substr (pdfData.indexOf (&quot;,&quot;) + 1));"/>
+				<outline text="const theBytes = new Uint8Array (theChars.length);"/>
+				<outline text="for (var i = 0; i &lt; theChars.length; i++) {">
+					<outline text="theBytes [i] = theChars.charCodeAt (i);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="return (URL.createObjectURL (new Blob ([theBytes], {type: &quot;application/pdf&quot;})));"/>
+				<outline text="}"/>
+				</outline>
+			<outline text="function getPdfHtml (urlPdfBlob) {">
+				<outline text="const divPdfView = document.createElement (&quot;div&quot;);"/>
+				<outline text="divPdfView.className = &quot;divPdfView&quot;;"/>
+				<outline text="const iframePdf = document.createElement (&quot;iframe&quot;);"/>
+				<outline text="iframePdf.className = &quot;iframePdf&quot;;"/>
+				<outline text="iframePdf.src = urlPdfBlob;"/>
+				<outline text="divPdfView.appendChild (iframePdf);"/>
+				<outline text="return (divPdfView.outerHTML);"/>
+				<outline text="}"/>
+				</outline>
+			<outline text="function releasePdf (theTab) { //the tab is done with the PDF it was showing, if it was showing one">
+				<outline text="if (theTab.urlPdfBlob !== undefined) {">
+					<outline text="URL.revokeObjectURL (theTab.urlPdfBlob);"/>
+					<outline text="theTab.urlPdfBlob = undefined;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
 			<outline text="function getDownloadHtml (theResult) { //11/10/26 by CC -- the page for a file that isn&apos;t a page, a picture or text, an archive say: its name, its size when the server said, and a link that downloads it (Dave, 11/10: every content type is something the reader can land on)">
 				<outline text="var theName = theResult.url;"/>
 				<outline text="try {">
@@ -5241,7 +5676,7 @@
 					<outline text="theFirst = theFirst.nextElementSibling;"/>
 					<outline text="}"/>
 					</outline>
-				<outline text="const flListingOrPicture = document.body.classList.contains (&quot;sourceShowing&quot;) || document.body.classList.contains (&quot;imageShowing&quot;);"/>
+				<outline text="const flListingOrPicture = document.body.classList.contains (&quot;sourceShowing&quot;) || document.body.classList.contains (&quot;imageShowing&quot;) || document.body.classList.contains (&quot;pdfShowing&quot;);"/>
 				<outline text="if ((divPageArrows !== null) &amp;&amp; (theFirst !== null) &amp;&amp; !flListingOrPicture) {">
 					<outline text="if (window.getComputedStyle (theFirst).textAlign.indexOf (&quot;center&quot;) !== -1) {">
 						<outline text="const theStyle = window.getComputedStyle (divPageArrows);"/>
@@ -5262,6 +5697,7 @@
 				<outline text="const flShowSource = theTab.flShowSource &amp;&amp; (theTab.source !== undefined); //11/3/26 by CC -- the Markdown button"/>
 				<outline text="document.body.classList.toggle (&quot;sourceShowing&quot;, flShowSource || (theTab.kind === &quot;html&quot;) || (theTab.kind === &quot;xml&quot;) || (theTab.kind === &quot;text&quot;) || (theTab.flListing === true)); //10/27/26 by CC -- the source view runs the width of the window, from the upper left (Dave); the image view centers the picture"/>
 				<outline text="document.body.classList.toggle (&quot;imageShowing&quot;, theTab.kind === &quot;image&quot;);"/>
+				<outline text="document.body.classList.toggle (&quot;pdfShowing&quot;, theTab.kind === &quot;pdf&quot;); //11/21/26 by CC"/>
 				<outline text="if (flShowSource) {">
 					<outline text="const preSource = document.createElement (&quot;pre&quot;);"/>
 					<outline text="preSource.className = &quot;preSource&quot;;"/>
@@ -5340,7 +5776,13 @@
 				</outline>
 			<outline text=""/>
 			<outline text="function closeTab (ix) {">
+				<outline text="if ((tabs.length === 1) &amp;&amp; !navigator.platform.startsWith (&quot;Mac&quot;) &amp;&amp; (window.mdBrowser.flDemo !== true)) { //11/21/26 by CC -- THE LAST TAB OFF THE MAC (issue 4, John Evdemon&apos;s suggestion and his code, tested by him on Windows 11): on Windows and Linux closing the last tab closes the app, as Chrome, Edge and Firefox do there (Dave: &quot;make it close the app&quot;). tabs.json isn&apos;t touched, so the page comes back on the next launch. On the Mac a new empty tab takes its place, as before. Not in the demo, which is a page in someone&apos;s browser">
+					<outline text="window.close ();"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
 				<outline text="stopWatching (tabs [ix]); //10/26/26 by CC"/>
+				<outline text="releasePdf (tabs [ix]); //11/21/26 by CC"/>
 				<outline text="tabs.splice (ix, 1);"/>
 				<outline text="if (tabs.length === 0) {">
 					<outline text="tabs.push (newTab ());"/>
@@ -5537,7 +5979,7 @@
 					</outline>
 				<outline text="const flViewSource = theUrl.indexOf (prefixViewSource) === 0; //10/16/26 by CC -- fetch the page behind the prefix, show its text"/>
 				<outline text="const urlToGet = (flViewSource) ? theUrl.substr (prefixViewSource.length) : theUrl;"/>
-				<outline text="window.mdBrowser.getPage (urlToGet).then (function (theResult) {">
+				<outline text="window.mdBrowser.getPage (urlToGet, flViewSource).then (function (theResult) { //11/21/26: flViewSource, so View Source of an HTML page shows the HTML, not its Markdown copy">
 					<outline text=""/>
 					<outline text="/*  11/12/26 by CC -- two ways the tab stays on the page it had.">
 						<outline text=""/>
@@ -5563,10 +6005,18 @@
 						<outline text="Dave: &quot;it should open it in the user&apos;s chosen default"/>
 						<outline text="browser.&quot; An HTML address typed into the address bar still"/>
 						<outline text="shows the page&apos;s source (&quot;let it stay, i actually LIKE"/>
-						<outline text="looking at the html text in bonbon&quot;).  */"/>
+						<outline text="looking at the html text in bonbon&quot;)."/>
+						<outline text=""/>
+						<outline text="11/21/26 by CC -- a third: the app opened it somewhere else. A"/>
+						<outline text="PDF, when the reader&apos;s config.json says PDFs go to the"/>
+						<outline text="system&apos;s viewer. Handled like the link that opened in the"/>
+						<outline text="historic browser, except that the app has already opened it,"/>
+						<outline text="and it doesn&apos;t matter whether the address was clicked or"/>
+						<outline text="typed.  */"/>
 						</outline>
 					<outline text=""/>
-					<outline text="const flToBrowser = theResult.flOk &amp;&amp; flFromLink &amp;&amp; !flViewSource &amp;&amp; (theResult.kind === &quot;html&quot;);"/>
+					<outline text="const flOpenedOutside = theResult.flOk &amp;&amp; (theResult.kind === &quot;openedOutside&quot;);"/>
+					<outline text="const flToBrowser = flOpenedOutside || (theResult.flOk &amp;&amp; flFromLink &amp;&amp; !flViewSource &amp;&amp; (theResult.kind === &quot;html&quot;));"/>
 					<outline text="if (flToBrowser || !theResult.flOk) {">
 						<outline text="if ((urlBefore === undefined) &amp;&amp; !flToBrowser) {">
 							<outline text="theTab.title = theTab.url;"/>
@@ -5583,7 +6033,10 @@
 							<outline text="}"/>
 							</outline>
 						<outline text="if (flToBrowser) {">
-							<outline text="window.mdBrowser.openInBrowser (theResult.url);"/>
+							<outline text="if (!flOpenedOutside) {">
+								<outline text="window.mdBrowser.openInBrowser (theResult.url);"/>
+								<outline text="}"/>
+								</outline>
 							<outline text="if (urlBefore === undefined) { //a tab opened for this link, a cmd-click: nothing is going in it">
 								<outline text="closeTab (tabs.indexOf (theTab));"/>
 								<outline text="}"/>
@@ -5608,6 +6061,7 @@
 						<outline text="}"/>
 						</outline>
 					<outline text=""/>
+					<outline text="releasePdf (theTab); //11/21/26 by CC -- the tab is moving on"/>
 					<outline text="theTab.url = (flViewSource) ? prefixViewSource + theResult.url : theResult.url;"/>
 					<outline text="if (!flFromHistory) {">
 						<outline text="theTab.pageHistory.length = theTab.ixHistory + 1; //drop anything ahead of where we are"/>
@@ -5658,6 +6112,12 @@
 							<outline text="imgView.src = theResult.imageData;"/>
 							<outline text="divImageView.appendChild (imgView);"/>
 							<outline text="theTab.html = divImageView.outerHTML;"/>
+							<outline text="theTab.source = undefined;"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="else if (theKind === &quot;pdf&quot;) { //11/21/26 by CC -- a PDF, in the tab">
+							<outline text="theTab.urlPdfBlob = getPdfBlobUrl (theResult.pdfData);"/>
+							<outline text="theTab.html = getPdfHtml (theTab.urlPdfBlob);"/>
 							<outline text="theTab.source = undefined;"/>
 							<outline text="}"/>
 							</outline>

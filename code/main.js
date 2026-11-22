@@ -5,7 +5,7 @@
 	is made, where the charter's rules decide whether what came back is a
 	page, and where the Markdown becomes HTML.  */
 
-const {app, BrowserWindow, Menu, ipcMain, clipboard, shell} = require ("electron");
+const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net} = require ("electron"); //11/21/26 by CC -- net, Electron's own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js
 const fs = require ("fs");
 const pathTool = require ("path");
 const pageRequests = require ("./pageRequests.js"); //11/2/26 by CC -- the requests, the charter's rules about what counts as a page, favicons and the table of contents; they were in this file until the demo's server needed the same code
@@ -28,6 +28,7 @@ var config = {
 		"text/javascript": "js"
 		},
 	ctSecsHandlerTimeout: 5, //11/19/26 by CC -- how long a page handler has to answer before the page is shown without it
+	flOpenPdfsInSystemViewer: false, //11/21/26 by CC -- a PDF shows in the tab, as it does in the historic browsers; true hands it to the system's PDF viewer instead (Dave; the name is his to approve, and he did). There's no UI for it yet, it's set in config.json in the data folder
 	flCalendar: false //10/17/26 by CC -- the calendar beside the text when the site has a table of contents. 10/18: off by default and gone from the UI (Dave: "reader-hostile"); the code stays for when we come back to it
 	};
 var mainWindow; //assigned by createWindow
@@ -348,7 +349,7 @@ function buildMenu () {
 			label: "Bookmarks",
 			submenu: bookmarksMenu
 			},
-		{role: "windowMenu"}
+		(process.platform === "darwin") ? {role: "windowMenu"} : {label: "Window", submenu: [{role: "minimize"}, {role: "zoom"}]} //11/21/26 by CC -- CTRL+W OFF THE MAC (issue 3, John Evdemon, who found the cause and tested the cure on Windows 11): there Electron's Window menu has a Close item with the same key as Close Tab, and Close won, so Ctrl+W closed the whole window. The Mac's Window menu has no such item and stays as it was
 		];
 	Menu.setApplicationMenu (Menu.buildFromTemplate (theTemplate));
 	}
@@ -360,7 +361,8 @@ function createWindow () {
 		titleBarStyle: "hiddenInset", //10/12/26 by CC -- TABS IN THE TITLE BAR, Chrome's layout: the shell draws the tab strip where the title bar was, the address bar below it; the traffic lights stay, inset at the left of the strip
 		trafficLightPosition: {x: 14, y: 13},
 		webPreferences: {
-			preload: pathTool.join (__dirname, "preload.js")
+			preload: pathTool.join (__dirname, "preload.js"),
+			plugins: true //11/21/26 by CC -- Chromium's PDF viewer, for a PDF shown in a tab
 			}
 		};
 	if (process.platform === "linux") { //11/14/26 by CC -- THE ICON ON LINUX. On the Mac the icon is part of the app's package; on Linux the window has to be told, or the taskbar shows a generic one (Dave: "add it")
@@ -539,11 +541,62 @@ ipcMain.handle ("mdBrowser.getFavicon", function (event, theUrl) {
 		}));
 	});
 
-ipcMain.handle ("mdBrowser.getPage", function (event, theUrl) {
+/*  11/21/26 by CC -- PDFS. A link to a PDF used to get the page that
+	offers a download (issue 9, Joseph Fieber). Dave: do what the
+	historic browsers do, show it in the tab, and have a pref that hands
+	it to the system's PDF viewer instead, flOpenPdfsInSystemViewer in
+	config.json. With the pref on, the PDF is saved in a BonBon folder
+	in the system's temporary folder and opened from there, and the
+	shell is told it was opened outside, so the tab stays on the page
+	it had, the way it does when a link opens in the historic browser.  */
+
+function openPdfInSystemViewer (theResult, callback) { //callback (err)
+	var theName = "document.pdf";
+	try {
+		const thePath = decodeURIComponent (new URL (theResult.url).pathname);
+		const theLast = thePath.substr (thePath.lastIndexOf ("/") + 1).replace (/[^A-Za-z0-9._ -]/g, "");
+		if (theLast.length > 0) {
+			theName = (theLast.toLowerCase ().endsWith (".pdf")) ? theLast : theLast + ".pdf";
+			}
+		}
+	catch (err) {
+		}
+	const theFolder = pathTool.join (app.getPath ("temp"), "BonBon"), theFile = pathTool.join (theFolder, theName);
+	try {
+		fs.mkdirSync (theFolder, {recursive: true});
+		fs.writeFileSync (theFile, Buffer.from (theResult.pdfData.substr (theResult.pdfData.indexOf (",") + 1), "base64"));
+		}
+	catch (err) {
+		callback ({message: "Can't open " + theResult.url + " in the system's PDF viewer because the file couldn't be saved: " + err.message});
+		return;
+		}
+	shell.openPath (theFile).then (function (theError) { //answers "" when it opened
+		if (theError.length > 0) {
+			callback ({message: "Can't open " + theResult.url + " in the system's PDF viewer because " + theError + "."});
+			}
+		else {
+			callback (undefined);
+			}
+		});
+	}
+
+ipcMain.handle ("mdBrowser.getPage", function (event, theUrl, flAsItCame) { //11/21/26: flAsItCame, for View Source, see getPage in pageRequests.js
 	return (new Promise (function (resolve) {
 		pageRequests.getPage (theUrl, function (theResult) {
-			pageHandlers.handlePage (theUrl, theResult, resolve); //11/19/26 by CC -- a page that isn't Markdown goes to its handler, if there's one for its extension
-			});
+			if (theResult.flOk && (theResult.kind === "pdf") && config.flOpenPdfsInSystemViewer && (flAsItCame !== true)) { //11/21/26 by CC
+				openPdfInSystemViewer (theResult, function (err) {
+					if (err) {
+						resolve ({flOk: false, url: theResult.url, status: 0, message: err.message});
+						}
+					else {
+						resolve ({flOk: true, kind: "openedOutside", url: theResult.url});
+						}
+					});
+				}
+			else {
+				pageHandlers.handlePage (theUrl, theResult, resolve); //11/19/26 by CC -- a page that isn't Markdown goes to its handler, if there's one for its extension
+				}
+			}, flAsItCame === true);
 		}));
 	});
 
@@ -608,7 +661,7 @@ app.on ("open-url", function (event, theUrl) {
 
 app.whenReady ().then (function () {
 	readConfig ();
-	pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: "Markdown Browser/" + app.getVersion ()}); //11/2/26 by CC -- what the requests need from the app; the demo's server sets its own
+	pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: "Markdown Browser/" + app.getVersion (), electronNet: net}); //11/2/26 by CC -- what the requests need from the app; the demo's server sets its own
 	moveDataFromOldName ();
 	seedStylesheets (); //10/27/26 by CC
 	pageHandlers.init ({extensionsForTypes: config.extensionsForTypes, ctSecsHandlerTimeout: config.ctSecsHandlerTimeout}); //11/19/26 by CC

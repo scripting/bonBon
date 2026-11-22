@@ -26,7 +26,10 @@ const frontMatter = require ("./frontMatter.js");
 var options = {
 	maxRedirects: 10,
 	userAgent: "Markdown Browser",
-	cacheMinutes: undefined //how long a site's icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs
+	cacheMinutes: undefined, //how long a site's icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs
+	electronNet: undefined, //11/21/26 by CC -- Electron's net module, when the caller is the app; requests are made with it, see WHOSE CERTIFICATES
+	maxTwinSearchBytes: 64 * 1024, //11/21/26 by CC -- how far into an HTML page isMarkdownUrl reads, looking for the line that names its Markdown copy
+	maxPdfBytes: 30 * 1024 * 1024 //11/21/26 by CC -- a PDF bigger than this isn't shown in the tab; it gets the page that offers the download
 	};
 
 function init (userOptions) {
@@ -66,8 +69,10 @@ function setCached (theCache, theKey, theValue) {
 	being asked; so do we. If the bytes can't be unzipped they go on as
 	they came.  */
 
-function unzipBody (theBody, theContentEncoding, callback) { //calls back with the page's bytes, unzipped if the server said they were zipped
+function unzipBody (theBody, theContentEncoding, callback, flCutShort=false) { //calls back with the page's bytes, unzipped if the server said they were zipped. 11/21/26: flCutShort, we stopped reading before the end (maxBodyBytes), so what's there is unzipped as far as it goes
 	const theEncoding = (theContentEncoding === undefined) ? "" : theContentEncoding.trim ().toLowerCase ();
+	const zlibOptions = (flCutShort) ? {finishFlush: zlib.constants.Z_SYNC_FLUSH} : {};
+	const brotliOptions = (flCutShort) ? {finishFlush: zlib.constants.BROTLI_OPERATION_FLUSH} : {};
 	function unzipped (err, theUnzippedBody) {
 		if (err) {
 			callback (theBody);
@@ -78,12 +83,12 @@ function unzipBody (theBody, theContentEncoding, callback) { //calls back with t
 		}
 	switch (theEncoding) {
 		case "gzip": case "x-gzip":
-			zlib.gunzip (theBody, unzipped);
+			zlib.gunzip (theBody, zlibOptions, unzipped);
 			break;
 		case "deflate":
-			zlib.inflate (theBody, function (err, theUnzippedBody) {
+			zlib.inflate (theBody, zlibOptions, function (err, theUnzippedBody) {
 				if (err) { //some servers send deflate without its wrapper
-					zlib.inflateRaw (theBody, unzipped);
+					zlib.inflateRaw (theBody, zlibOptions, unzipped);
 					}
 				else {
 					unzipped (undefined, theUnzippedBody);
@@ -91,14 +96,48 @@ function unzipBody (theBody, theContentEncoding, callback) { //calls back with t
 				});
 			break;
 		case "br":
-			zlib.brotliDecompress (theBody, unzipped);
+			zlib.brotliDecompress (theBody, brotliOptions, unzipped);
 			break;
 		default:
 			callback (theBody);
 		}
 	}
 
-function httpGet (theUrl, ctRedirects, callback, acceptHeader="text/markdown", flHeadersOnly=false, isBodyWanted=undefined) { //10/17/26 by CC -- acceptHeader: what we're asking for; text/x-opml for the table of contents, so a server that wraps OPML in HTML (PagePark) sends the outline instead. 11/9/26: flHeadersOnly, for isMarkdownUrl: the answer is in the headers, so the connection is dropped once they're in and the body comes back empty; a link to an archive isn't downloaded to learn it isn't a page. 11/10/26: isBodyWanted (theUrl, contentType), for getPage: asked once the headers are in, and when it says no the body isn't read, so a 13 megabyte archive isn't downloaded to draw the page that offers it. Every answer has contentLocation, the address the server says the file it sent lives at (a folder's address answered with its readme), and contentLength
+/*  11/21/26 by CC -- WHOSE CERTIFICATES. A page at stilles-coaching.ch
+	wouldn't load: "self signed certificate in certificate chain" (issue
+	10, wortgefecht). The certificate was fine. The requests were made
+	with the Node that's inside the app, which carries its own list of
+	the authorities it trusts, frozen when that Node was built, and the
+	site's authority (SSL.com's 2022 root) is newer than the list.
+	Scott Hanson found the cause, and he and CC each tried the cure: in
+	the app the request is made by Electron's own network code (net),
+	the code Chrome uses, which trusts what the system trusts and is
+	kept current with it. A bad certificate is still refused.
+	
+	The app hands net to init as electronNet. The demo's server runs in
+	plain Node, a current one, has no net, and asks the way it did.
+	
+	What's different about net, all of it in requestWithElectron: it
+	unzips a zipped page itself; a header's value can be a list; a
+	redirect is an event, and we follow it ourselves so the count and
+	the final address are ours; and it keeps a cache, whose answers
+	come back in Electron 22 with no headers (Scott), so every request
+	says no-cache.
+	
+	If net refuses a certificate the request is tried once more the old
+	way. On a Linux where Chromium can't find the system's authorities
+	that keeps every site from failing; Node's list is still a list.  */
+
+function getPlainHeaders (theHeaders) { //net's headers, in the shape Node's have: names in lower case, a list of values joined into one
+	const plainHeaders = {};
+	for (var x in theHeaders) {
+		const theValue = theHeaders [x];
+		plainHeaders [x.toLowerCase ()] = (Array.isArray (theValue)) ? theValue.join (", ") : theValue;
+		}
+	return (plainHeaders);
+	}
+
+function httpGet (theUrl, ctRedirects, callback, acceptHeader="text/markdown", flHeadersOnly=false, isBodyWanted=undefined, maxBodyBytes=undefined) { //10/17/26 by CC -- acceptHeader: what we're asking for; text/x-opml for the table of contents, so a server that wraps OPML in HTML (PagePark) sends the outline instead. 11/9/26: flHeadersOnly, for isMarkdownUrl: the answer is in the headers, so the connection is dropped once they're in and the body comes back empty; a link to an archive isn't downloaded to learn it isn't a page. 11/10/26: isBodyWanted (theUrl, contentType, contentLength), for getPage: asked once the headers are in, and when it says no the body isn't read, so a 13 megabyte archive isn't downloaded to draw the page that offers it. Every answer has contentLocation, the address the server says the file it sent lives at (a folder's address answered with its readme), and contentLength. 11/21/26: maxBodyBytes, for isMarkdownUrl: reading stops there, and the answer's body is what had come
 	var parsedUrl;
 	try {
 		parsedUrl = new URL (theUrl);
@@ -107,45 +146,62 @@ function httpGet (theUrl, ctRedirects, callback, acceptHeader="text/markdown", f
 		callback ({message: "Can't get " + theUrl + " because it isn't a valid URL."});
 		return;
 		}
-	const theModule = (parsedUrl.protocol === "https:") ? https : http;
 	if ((parsedUrl.protocol !== "https:") && (parsedUrl.protocol !== "http:")) {
 		callback ({message: "Can't get " + theUrl + " because only http and https are supported."});
 		return;
 		}
-	const theOptions = {
-		headers: {
-			"Accept": acceptHeader,
-			"User-Agent": options.userAgent
-			}
+	const theHeaders = {
+		"Accept": acceptHeader,
+		"User-Agent": options.userAgent
 		};
-	const theRequest = theModule.get (theUrl, theOptions, function (theResponse) {
-		const theStatus = theResponse.statusCode;
-		if ((theStatus >= 300) && (theStatus < 400) && (theResponse.headers.location !== undefined)) {
-			theResponse.resume ();
-			if (ctRedirects >= options.maxRedirects) {
-				callback ({message: "Can't get " + theUrl + " because there were too many redirects."});
+	var flAnswered = false; //one answer per request, whatever the connection does after we've stopped reading it
+	function answer (err, theAnswer) {
+		if (!flAnswered) {
+			flAnswered = true;
+			callback (err, theAnswer);
+			}
+		}
+	function followRedirect (theLocation) {
+		if (flAnswered) {
+			return;
+			}
+		if (ctRedirects >= options.maxRedirects) {
+			answer ({message: "Can't get " + theUrl + " because there were too many redirects."});
+			}
+		else {
+			var urlRedirect;
+			try {
+				urlRedirect = new URL (theLocation, theUrl).toString ();
 				}
-			else {
-				const urlRedirect = new URL (theResponse.headers.location, theUrl).toString ();
-				httpGet (urlRedirect, ctRedirects + 1, callback, acceptHeader, flHeadersOnly, isBodyWanted);
+			catch (err) {
+				answer ({message: "Can't get " + theUrl + " because it redirects to an address that isn't a valid URL."});
+				return;
 				}
+			flAnswered = true; //the answer is the redirect's
+			httpGet (urlRedirect, ctRedirects + 1, callback, acceptHeader, flHeadersOnly, isBodyWanted, maxBodyBytes);
+			}
+		}
+	function gotResponse (theStatus, theStatusMessage, responseHeaders, theStream, stopReading, flAlreadyUnzipped) { //the headers are in; theStream gives the body, stopReading drops the connection
+		if ((theStatus >= 300) && (theStatus < 400) && (responseHeaders.location !== undefined)) {
+			stopReading ();
+			followRedirect (responseHeaders.location);
 			return;
 			}
 		var contentLocation; //11/10/26 by CC -- the standard header, made absolute
-		if (theResponse.headers ["content-location"] !== undefined) {
+		if (responseHeaders ["content-location"] !== undefined) {
 			try {
-				contentLocation = new URL (theResponse.headers ["content-location"], theUrl).toString ();
+				contentLocation = new URL (responseHeaders ["content-location"], theUrl).toString ();
 				}
 			catch (err) {
 				}
 			}
-		const contentLength = (theResponse.headers ["content-length"] === undefined) ? undefined : Number (theResponse.headers ["content-length"]);
-		if (flHeadersOnly || ((isBodyWanted !== undefined) && (theStatus === 200) && !isBodyWanted (theUrl, theResponse.headers ["content-type"]))) { //11/9/26 by CC
-			theResponse.destroy ();
-			callback (undefined, {
+		const contentLength = (responseHeaders ["content-length"] === undefined) ? undefined : Number (responseHeaders ["content-length"]);
+		if (flHeadersOnly || ((isBodyWanted !== undefined) && (theStatus === 200) && !isBodyWanted (theUrl, responseHeaders ["content-type"], contentLength))) { //11/9/26 by CC
+			stopReading ();
+			answer (undefined, {
 				url: theUrl,
 				status: theStatus,
-				contentType: theResponse.headers ["content-type"],
+				contentType: responseHeaders ["content-type"],
 				contentLocation,
 				contentLength,
 				body: Buffer.alloc (0)
@@ -153,27 +209,99 @@ function httpGet (theUrl, ctRedirects, callback, acceptHeader="text/markdown", f
 			return;
 			}
 		const theChunks = [];
-		theResponse.on ("data", function (theChunk) {
-			theChunks.push (theChunk);
-			});
-		theResponse.on ("end", function () {
-			unzipBody (Buffer.concat (theChunks), theResponse.headers ["content-encoding"], function (theBody) { //11/18/26 by CC
-				callback (undefined, {
+		var ctBytes = 0, flFinished = false;
+		function finish (flCutShort) {
+			if (flFinished) {
+				return;
+				}
+			flFinished = true;
+			unzipBody (Buffer.concat (theChunks), (flAlreadyUnzipped) ? undefined : responseHeaders ["content-encoding"], function (theBody) { //11/18/26 by CC
+				answer (undefined, {
 					url: theUrl,
 					status: theStatus,
-					statusMessage: theResponse.statusMessage, //11/12/26 by CC -- the server's words for the status, "Not Found"; see getServerErrorMessage
-					contentType: theResponse.headers ["content-type"],
-					headers: theResponse.headers, //11/19/26 by CC -- everything the server said, for a page handler's options
+					statusMessage: theStatusMessage, //11/12/26 by CC -- the server's words for the status, "Not Found"; see getServerErrorMessage
+					contentType: responseHeaders ["content-type"],
+					headers: responseHeaders, //11/19/26 by CC -- everything the server said, for a page handler's options
 					contentLocation,
 					contentLength,
 					body: theBody //10/12/26 by CC -- a Buffer, not a string: a favicon is binary; a page's text is body.toString ()
 					});
-				});
+				}, flCutShort);
+			}
+		theStream.on ("data", function (theChunk) {
+			if (!flFinished) {
+				theChunks.push (theChunk);
+				ctBytes += theChunk.length;
+				if ((maxBodyBytes !== undefined) && (ctBytes >= maxBodyBytes)) { //11/21/26 by CC
+					finish (true);
+					stopReading ();
+					}
+				}
 			});
-		});
-	theRequest.on ("error", function (err) {
-		callback ({message: "Can't get " + theUrl + " because " + err.message + "."});
-		});
+		theStream.on ("end", function () {
+			finish (false);
+			});
+		theStream.on ("error", function (err) {
+			if (!flFinished) {
+				flFinished = true;
+				answer ({message: "Can't get " + theUrl + " because " + err.message + "."});
+				}
+			});
+		}
+	function requestWithNode () {
+		const theModule = (parsedUrl.protocol === "https:") ? https : http;
+		const theRequest = theModule.get (theUrl, {headers: theHeaders}, function (theResponse) {
+			gotResponse (theResponse.statusCode, theResponse.statusMessage, theResponse.headers, theResponse, function () {
+				theResponse.destroy ();
+				}, false);
+			});
+		theRequest.on ("error", function (err) {
+			answer ({message: "Can't get " + theUrl + " because " + err.message + "."});
+			});
+		}
+	function requestWithElectron () { //11/21/26 by CC -- see WHOSE CERTIFICATES above
+		var theRequest, flStopped = false; //flStopped: we dropped the connection ourselves, and what it says about that isn't an error
+		try {
+			theRequest = options.electronNet.request ({url: theUrl, redirect: "manual"});
+			for (var x in theHeaders) {
+				theRequest.setHeader (x, theHeaders [x]);
+				}
+			theRequest.setHeader ("Cache-Control", "no-cache");
+			}
+		catch (err) {
+			requestWithNode ();
+			return;
+			}
+		theRequest.on ("redirect", function (theStatus, theMethod, urlRedirect) {
+			flStopped = true;
+			theRequest.abort ();
+			followRedirect (urlRedirect);
+			});
+		theRequest.on ("response", function (theResponse) {
+			gotResponse (theResponse.statusCode, theResponse.statusMessage, getPlainHeaders (theResponse.headers), theResponse, function () {
+				flStopped = true;
+				theRequest.abort ();
+				}, true);
+			});
+		theRequest.on ("error", function (err) {
+			if (!flStopped) {
+				flStopped = true;
+				if (err.message.indexOf ("ERR_CERT") !== -1) { //net won't take the certificate; ask once more the old way
+					requestWithNode ();
+					}
+				else {
+					answer ({message: "Can't get " + theUrl + " because " + err.message + "."});
+					}
+				}
+			});
+		theRequest.end ();
+		}
+	if (options.electronNet === undefined) {
+		requestWithNode ();
+		}
+	else {
+		requestWithElectron ();
+		}
 	}
 
 /*  Is it a page? The charter's rules, in order. text/markdown is a page.
@@ -203,7 +331,7 @@ function isMarkdownPage (theUrl, theContentType) {
 	return (false);
 	}
 
-function getPageKind (theUrl, theContentType) { //10/27/26 by CC -- what a non-Markdown answer is, when it's something we show: "html", "xml", "image", "text", or undefined
+function getPageKind (theUrl, theContentType) { //10/27/26 by CC -- what a non-Markdown answer is, when it's something we show: "html", "xml", "image", "pdf", "text", or undefined
 
 	/*  Dave, 10/27: a link to an HTML page shows the page's source, the
 		mirror of what Chrome does with a link to a Markdown file. Not the
@@ -249,6 +377,9 @@ function getPageKind (theUrl, theContentType) { //10/27/26 by CC -- what a non-M
 	if ((theType === "image/gif") || (theType === "image/png") || (theType === "image/jpeg") || (theType === "image/webp") || hasExtension ([".gif", ".png", ".jpg", ".jpeg", ".webp"])) {
 		return ("image");
 		}
+	if ((theType === "application/pdf") || hasExtension ([".pdf"])) { //11/21/26 by CC -- shown in the tab, the way the historic browsers show one
+		return ("pdf");
+		}
 	if ((theType.indexOf ("text/") === 0) || (theType === "application/json") || (theType === "application/javascript") || (theType === "application/x-javascript") || (theType === "application/yaml") || hasExtension ([".txt", ".js", ".css", ".json", ".yaml", ".yml", ".py", ".sh", ".c", ".h", ".php", ".rb", ".go", ".rs", ".java", ".ts", ".sql", ".csv", ".ini", ".toml"])) { //11/10/26 by CC
 		return ("text");
 		}
@@ -276,6 +407,56 @@ function getHtmlTitle (htmltext) { //the text of the <title> element, or undefin
 		}
 	const theTitle = theMatch [1].replace (/\s+/g, " ").trim ();
 	return ((theTitle.length === 0) ? undefined : theTitle);
+	}
+
+/*  11/21/26 by CC -- THE MARKDOWN COPY. A site on GitHub Pages can't
+	answer our request for Markdown: the server is static and doesn't
+	look at Accept, so the site's address gives HTML, and the Markdown
+	file sits beside it unseen (issue 6, ludwa6; rsdoiel said the same).
+	What such a site can do is name the copy in the page, with a line
+	the web has had for years, the one that points at a page's feed:
+	
+		<link rel="alternate" type="text/markdown" href="index.md">
+	
+	When an answer is HTML we look for that line in the page's head.
+	If it's there and the address it names serves Markdown, that's the
+	page, as if the reader had typed its address (Dave: the address bar
+	shows the Markdown file's address). If it isn't there, or the
+	address doesn't pan out, the answer is the HTML, as before.  */
+
+function getMarkdownTwinUrl (htmltext, urlPage) { //the address the page's head names as its Markdown copy, made whole; undefined when it names none
+	const ixBody = htmltext.search (/<body[\s>]/i);
+	const theHead = (ixBody === -1) ? htmltext : htmltext.substr (0, ixBody);
+	const theTags = theHead.match (/<link\b[^>]*>/gi);
+	var urlTwin;
+	function getAttribute (theTag, theName) {
+		const theMatch = theTag.match (new RegExp ("\\s" + theName + "\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))", "i"));
+		if (theMatch === null) {
+			return (undefined);
+			}
+		const theValue = (theMatch [1] !== undefined) ? theMatch [1] : (theMatch [2] !== undefined) ? theMatch [2] : theMatch [3];
+		return (theValue.replace (/&amp;/g, "&").trim ());
+		}
+	if (theTags !== null) {
+		theTags.forEach (function (theTag) {
+			if (urlTwin === undefined) {
+				const theRel = getAttribute (theTag, "rel"), theType = getAttribute (theTag, "type"), theHref = getAttribute (theTag, "href");
+				if ((theRel !== undefined) && (theType !== undefined) && (theHref !== undefined) && (theHref.length > 0)) {
+					if ((theRel.toLowerCase ().split (/\s+/).indexOf ("alternate") !== -1) && (theType.toLowerCase () === "text/markdown")) {
+						try {
+							const theUrl = new URL (theHref, urlPage).toString ();
+							if (theUrl !== urlPage) {
+								urlTwin = theUrl;
+								}
+							}
+						catch (err) {
+							}
+						}
+					}
+				}
+			});
+		}
+	return (urlTwin);
 	}
 
 function getServerErrorMessage (theResponse) { //11/12/26 by CC -- what to tell the reader when the server answered with something other than the page
@@ -310,7 +491,7 @@ function getServerErrorMessage (theResponse) { //11/12/26 by CC -- what to tell 
 	return ("Can't get the page because the server said \"" + theWords + ".\"");
 	}
 
-function getPage (theUrl, callback) { //answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind "file" {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder's address in the site's table of contents by its readme's
+function getPage (theUrl, callback, flAsItCame=false) { //11/21/26: flAsItCame, for View Source: an HTML page is answered as the HTML, its Markdown copy isn't looked for. Answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind "file" {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder's address in the site's table of contents by its readme's
 	
 	/*  11/17/26 by CC -- NOT ACCEPTABLE. We ask every server for Markdown.
 		Most that have only HTML send it anyway, and a clicked link to it
@@ -322,8 +503,16 @@ function getPage (theUrl, callback) { //answers {flOk, url, frontMatter, html, s
 		handled like any other answer.  */
 	
 	const acceptForPage = "text/markdown, text/x-opml", acceptForAnything = "*/*";
-	function isBodyWantedForPage (urlAnswered, theContentType) { //11/10/26 by CC -- the body is read only for what we draw
-		return (isMarkdownPage (urlAnswered, theContentType) || (getPageKind (urlAnswered, theContentType) !== undefined));
+	var flTwinTried = false; //11/21/26 by CC
+	function isBodyWantedForPage (urlAnswered, theContentType, theContentLength) { //11/10/26 by CC -- the body is read only for what we draw
+		if (isMarkdownPage (urlAnswered, theContentType)) {
+			return (true);
+			}
+		const theKind = getPageKind (urlAnswered, theContentType);
+		if (theKind === "pdf") { //11/21/26 by CC -- a very big one isn't read; it gets the page that offers the download
+			return ((theContentLength === undefined) || (theContentLength <= options.maxPdfBytes));
+			}
+		return (theKind !== undefined);
 		}
 	function askForPage (urlToGet, acceptHeader) {
 		httpGet (urlToGet, 0, function (err, theResponse) {
@@ -352,13 +541,31 @@ function getPage (theUrl, callback) { //answers {flOk, url, frontMatter, html, s
 					const theKind = getPageKind (theResponse.url, theResponse.contentType); //10/27/26 by CC -- html and xml: the source, shown as text; image: the picture, as a data URL, the way favicons travel
 					if (theKind === "html") {
 						const htmltext = theResponse.body.toString ();
-						callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: getHtmlTitle (htmltext), source: htmltext, contentType: theResponse.contentType, headers: theResponse.headers}); //11/19/26 by CC -- contentType and headers, here and in the next answer, for page handlers; see pageHandlers.js in the app
+						const htmlAnswer = {flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: getHtmlTitle (htmltext), source: htmltext, contentType: theResponse.contentType, headers: theResponse.headers}; //11/19/26 by CC -- contentType and headers, here and in the next answer, for page handlers; see pageHandlers.js in the app
+						const urlTwin = (flAsItCame || flTwinTried) ? undefined : getMarkdownTwinUrl (htmltext, theResponse.url); //11/21/26 by CC -- THE MARKDOWN COPY
+						if (urlTwin === undefined) {
+							callback (htmlAnswer);
+							}
+						else {
+							flTwinTried = true; //once; a copy that names a copy isn't followed
+							httpGet (urlTwin, 0, function (err, twinResponse) {
+								if ((!err) && (twinResponse.status === 200) && isMarkdownPage (twinResponse.url, twinResponse.contentType)) {
+									gotResponse (undefined, twinResponse);
+									}
+								else {
+									callback (htmlAnswer);
+									}
+								}, acceptForPage, false, isBodyWantedForPage);
+							}
 						}
 					else if ((theKind === "xml") || (theKind === "text")) {
 						callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, source: theResponse.body.toString (), contentType: theResponse.contentType, headers: theResponse.headers});
 						}
 					else if (theKind === "image") {
 						callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, imageData: "data:" + getImageTypeForKind (theResponse.url, theResponse.contentType) + ";base64," + theResponse.body.toString ("base64")});
+						}
+					else if ((theKind === "pdf") && (theResponse.body.length > 0)) { //11/21/26 by CC -- the PDF's bytes, as a data URL, the way a picture travels; the shell shows it in the tab
+						callback ({flOk: true, kind: theKind, url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, pdfData: "data:application/pdf;base64," + theResponse.body.toString ("base64")});
 						}
 					else { //11/10/26 by CC -- anything else is a file to download; it was the charter's 406 page. The body wasn't read, see isBodyWanted
 						callback ({flOk: true, kind: "file", url: theResponse.url, urlContentLocation: theResponse.contentLocation, title: undefined, contentType: theResponse.contentType, size: theResponse.contentLength});
@@ -603,11 +810,31 @@ function isMarkdownUrl (theUrl, callback) { //10/16/26 by CC -- does this addres
 		callback (theCached.value);
 		return;
 		}
-	httpGet (theUrl, 0, function (err, theResponse) {
-		const flMarkdown = (!err) && (theResponse.status === 200) && isMarkdownPage (theResponse.url, theResponse.contentType);
+	function gotAnswer (flMarkdown) {
 		setCached (markdownUrlAnswers, theUrl, flMarkdown);
 		callback (flMarkdown);
-		}, "text/markdown", true); //11/9/26 by CC -- headers only: the demo asks about every link on a page as it's drawn
+		}
+	httpGet (theUrl, 0, function (err, theResponse) {
+		if (err || (theResponse.status !== 200)) {
+			gotAnswer (false);
+			}
+		else if (isMarkdownPage (theResponse.url, theResponse.contentType)) {
+			gotAnswer (true);
+			}
+		else { //11/21/26 by CC -- THE MARKDOWN COPY: an HTML page that names a Markdown copy is a page we can show, so the answer is yes when the copy is there
+			const urlTwin = (getPageKind (theResponse.url, theResponse.contentType) === "html") ? getMarkdownTwinUrl (theResponse.body.toString (), theResponse.url) : undefined;
+			if (urlTwin === undefined) {
+				gotAnswer (false);
+				}
+			else {
+				httpGet (urlTwin, 0, function (err, twinResponse) {
+					gotAnswer ((!err) && (twinResponse.status === 200) && isMarkdownPage (twinResponse.url, twinResponse.contentType));
+					}, "text/markdown", true);
+				}
+			}
+		}, "text/markdown", false, function (urlAnswered, theContentType) { //11/9/26 by CC -- headers only: the demo asks about every link on a page as it's drawn. 11/21/26: and for an HTML page, the top of it, where the line naming its Markdown copy would be
+			return (getPageKind (urlAnswered, theContentType) === "html");
+			}, options.maxTwinSearchBytes);
 	}
 
 var urlStatusAnswers = {}; //11/10/26 by CC -- url -> {flAvailable, urlContentLocation}, the answers to getUrlStatus
@@ -631,6 +858,7 @@ function getUrlStatus (theUrl, callback) { //11/10/26 by CC -- is there somethin
 exports.init = init;
 exports.httpGet = httpGet;
 exports.isMarkdownPage = isMarkdownPage;
+exports.getMarkdownTwinUrl = getMarkdownTwinUrl; //11/21/26 by CC
 exports.getPageKind = getPageKind;
 exports.getPage = getPage;
 exports.getFavicon = getFavicon;

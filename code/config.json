@@ -16,5 +16,6 @@
 		"application/x-javascript": "js",
 		"text/javascript": "js"
 		},
-	"ctSecsHandlerTimeout": 5
+	"ctSecsHandlerTimeout": 5,
+	"flOpenPdfsInSystemViewer": false
 	}

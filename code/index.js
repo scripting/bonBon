@@ -732,14 +732,31 @@ function floatLeadImages () { //10/13/26 by CC -- an image at the head of a para
 		the image taken out of the line and floated at the right margin,
 		with scripting.com's padding. A paragraph that is only an image is
 		left alone; that's a picture, not a margin image. The alt text is
-		the Markdown's.  */
-	
+		the Markdown's.
+
+		11/21/26 by CC -- PLAIN WORDS AFTER THE PICTURE. Joseph Fieber's
+		home page: a picture, then a paragraph of words with no link or
+		bold in it, and the picture stayed in the line (issue 11). The
+		stylesheets tell a picture standing alone from a margin image
+		with img:only-child, which counts elements, not words, so a
+		picture with only words after it looked like one standing alone.
+		Dave's paragraphs nearly always have a link, so it never showed.
+		The cure is here and not in the stylesheets, because a reader's
+		stylesheets are copies in the data folder that a new version
+		never replaces: when the words after the picture have no element
+		among them, an empty span goes at the end of the paragraph, and
+		the picture isn't the only child any more. Every stylesheet, an
+		edited one too, then does what it does for Dave's paragraphs.  */
+
 	divPage.querySelectorAll ("p").forEach (function (theParagraph) {
 		const theFirst = theParagraph.firstElementChild;
 		if ((theFirst !== null) && (theFirst.tagName === "IMG") && (theFirst === theParagraph.firstChild)) {
 			const theText = theParagraph.textContent.trim ();
 			if (theText.length > 0) {
 				theFirst.classList.add ("imgRightMargin");
+				if (theParagraph.children.length === 1) { //11/21/26 by CC
+					theParagraph.appendChild (document.createElement ("span"));
+					}
 				}
 			}
 		});
@@ -1123,6 +1140,36 @@ function getTocNeighbors (theTab) { //11/10/26 by CC -- a promise for {urlPrev, 
 		}));
 	}
 
+/*  11/21/26 by CC -- A PDF IN THE TAB. The PDF's bytes come from the app
+	as a data URL, the way a picture's do. They go in a blob, and the tab
+	shows the blob in a frame, where Chromium's own PDF viewer draws it,
+	the one Chrome uses. The frame fills the window below the chrome.
+	The blob is let go when the tab moves on to another page or closes.  */
+
+function getPdfBlobUrl (pdfData) { //the data URL's bytes as a blob; answers the blob's address
+	const theChars = atob (pdfData.substr (pdfData.indexOf (",") + 1));
+	const theBytes = new Uint8Array (theChars.length);
+	for (var i = 0; i < theChars.length; i++) {
+		theBytes [i] = theChars.charCodeAt (i);
+		}
+	return (URL.createObjectURL (new Blob ([theBytes], {type: "application/pdf"})));
+	}
+function getPdfHtml (urlPdfBlob) {
+	const divPdfView = document.createElement ("div");
+	divPdfView.className = "divPdfView";
+	const iframePdf = document.createElement ("iframe");
+	iframePdf.className = "iframePdf";
+	iframePdf.src = urlPdfBlob;
+	divPdfView.appendChild (iframePdf);
+	return (divPdfView.outerHTML);
+	}
+function releasePdf (theTab) { //the tab is done with the PDF it was showing, if it was showing one
+	if (theTab.urlPdfBlob !== undefined) {
+		URL.revokeObjectURL (theTab.urlPdfBlob);
+		theTab.urlPdfBlob = undefined;
+		}
+	}
+
 function getDownloadHtml (theResult) { //11/10/26 by CC -- the page for a file that isn't a page, a picture or text, an archive say: its name, its size when the server said, and a link that downloads it (Dave, 11/10: every content type is something the reader can land on)
 	var theName = theResult.url;
 	try {
@@ -1334,7 +1381,7 @@ function balancePageArrows () { //11/12/26 by CC -- a centered first line, the p
 	if ((theFirst !== null) && theFirst.classList.contains ("imgRightMargin")) {
 		theFirst = theFirst.nextElementSibling;
 		}
-	const flListingOrPicture = document.body.classList.contains ("sourceShowing") || document.body.classList.contains ("imageShowing");
+	const flListingOrPicture = document.body.classList.contains ("sourceShowing") || document.body.classList.contains ("imageShowing") || document.body.classList.contains ("pdfShowing");
 	if ((divPageArrows !== null) && (theFirst !== null) && !flListingOrPicture) {
 		if (window.getComputedStyle (theFirst).textAlign.indexOf ("center") !== -1) {
 			const theStyle = window.getComputedStyle (divPageArrows);
@@ -1352,6 +1399,7 @@ function showCurrentTab () { //put the current tab's page in the window
 	const flShowSource = theTab.flShowSource && (theTab.source !== undefined); //11/3/26 by CC -- the Markdown button
 	document.body.classList.toggle ("sourceShowing", flShowSource || (theTab.kind === "html") || (theTab.kind === "xml") || (theTab.kind === "text") || (theTab.flListing === true)); //10/27/26 by CC -- the source view runs the width of the window, from the upper left (Dave); the image view centers the picture
 	document.body.classList.toggle ("imageShowing", theTab.kind === "image");
+	document.body.classList.toggle ("pdfShowing", theTab.kind === "pdf"); //11/21/26 by CC
 	if (flShowSource) {
 		const preSource = document.createElement ("pre");
 		preSource.className = "preSource";
@@ -1418,7 +1466,12 @@ function openUrlInNewTab (theUrl, flBackground, flFromLink) {
 	}
 
 function closeTab (ix) {
+	if ((tabs.length === 1) && !navigator.platform.startsWith ("Mac") && (window.mdBrowser.flDemo !== true)) { //11/21/26 by CC -- THE LAST TAB OFF THE MAC (issue 4, John Evdemon's suggestion and his code, tested by him on Windows 11): on Windows and Linux closing the last tab closes the app, as Chrome, Edge and Firefox do there (Dave: "make it close the app"). tabs.json isn't touched, so the page comes back on the next launch. On the Mac a new empty tab takes its place, as before. Not in the demo, which is a page in someone's browser
+		window.close ();
+		return;
+		}
 	stopWatching (tabs [ix]); //10/26/26 by CC
+	releasePdf (tabs [ix]); //11/21/26 by CC
 	tabs.splice (ix, 1);
 	if (tabs.length === 0) {
 		tabs.push (newTab ());
@@ -1577,7 +1630,7 @@ function loadUrl (theTab, theUrl, flFromHistory, flKeepPlace, flFromLink) { //11
 		}
 	const flViewSource = theUrl.indexOf (prefixViewSource) === 0; //10/16/26 by CC -- fetch the page behind the prefix, show its text
 	const urlToGet = (flViewSource) ? theUrl.substr (prefixViewSource.length) : theUrl;
-	window.mdBrowser.getPage (urlToGet).then (function (theResult) {
+	window.mdBrowser.getPage (urlToGet, flViewSource).then (function (theResult) { //11/21/26: flViewSource, so View Source of an HTML page shows the HTML, not its Markdown copy
 		
 		/*  11/12/26 by CC -- two ways the tab stays on the page it had.
 			
@@ -1603,9 +1656,17 @@ function loadUrl (theTab, theUrl, flFromHistory, flKeepPlace, flFromLink) { //11
 			Dave: "it should open it in the user's chosen default
 			browser." An HTML address typed into the address bar still
 			shows the page's source ("let it stay, i actually LIKE
-			looking at the html text in bonbon").  */
+			looking at the html text in bonbon").
+			
+			11/21/26 by CC -- a third: the app opened it somewhere else. A
+			PDF, when the reader's config.json says PDFs go to the
+			system's viewer. Handled like the link that opened in the
+			historic browser, except that the app has already opened it,
+			and it doesn't matter whether the address was clicked or
+			typed.  */
 		
-		const flToBrowser = theResult.flOk && flFromLink && !flViewSource && (theResult.kind === "html");
+		const flOpenedOutside = theResult.flOk && (theResult.kind === "openedOutside");
+		const flToBrowser = flOpenedOutside || (theResult.flOk && flFromLink && !flViewSource && (theResult.kind === "html"));
 		if (flToBrowser || !theResult.flOk) {
 			if ((urlBefore === undefined) && !flToBrowser) {
 				theTab.title = theTab.url;
@@ -1619,7 +1680,9 @@ function loadUrl (theTab, theUrl, flFromHistory, flKeepPlace, flFromLink) { //11
 				watchForUpdates (theTab);
 				}
 			if (flToBrowser) {
-				window.mdBrowser.openInBrowser (theResult.url);
+				if (!flOpenedOutside) {
+					window.mdBrowser.openInBrowser (theResult.url);
+					}
 				if (urlBefore === undefined) { //a tab opened for this link, a cmd-click: nothing is going in it
 					closeTab (tabs.indexOf (theTab));
 					}
@@ -1638,6 +1701,7 @@ function loadUrl (theTab, theUrl, flFromHistory, flKeepPlace, flFromLink) { //11
 			return;
 			}
 		
+		releasePdf (theTab); //11/21/26 by CC -- the tab is moving on
 		theTab.url = (flViewSource) ? prefixViewSource + theResult.url : theResult.url;
 		if (!flFromHistory) {
 			theTab.pageHistory.length = theTab.ixHistory + 1; //drop anything ahead of where we are
@@ -1682,6 +1746,11 @@ function loadUrl (theTab, theUrl, flFromHistory, flKeepPlace, flFromLink) { //11
 				imgView.src = theResult.imageData;
 				divImageView.appendChild (imgView);
 				theTab.html = divImageView.outerHTML;
+				theTab.source = undefined;
+				}
+			else if (theKind === "pdf") { //11/21/26 by CC -- a PDF, in the tab
+				theTab.urlPdfBlob = getPdfBlobUrl (theResult.pdfData);
+				theTab.html = getPdfHtml (theTab.urlPdfBlob);
 				theTab.source = undefined;
 				}
 			else if (theKind === "file") { //11/10/26 by CC -- not a page, a picture or text: the page that offers the download
