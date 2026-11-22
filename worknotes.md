@@ -1,3 +1,7 @@
+#### 11/22/26; 10:46:55 AM by DW
+
+Lots of small changes [outlined here](https://github.com/scripting/bonBon/issues/16). 
+
 #### 11/21/26; 10:25:43 AM by DW
 
 Uploaded a downloadable [snapshot](https://github.com/scripting/bonBon/blob/main/demos/brentbloginmarkdown/readme.md) of the inessential.com blog by Brent Simmons. 
