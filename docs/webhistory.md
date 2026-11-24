@@ -1,8 +1,8 @@
 # BonBon: A Historical Perspective
 
-Last week I had an interesting conversation with ChatGPT about where BonBon fits into the history of the web. I was surprised how quickly it understood the full picture. It started filling in the blanks, so I asked it to summarize the story for others to read. That's what this document contains.
+Last week I had an interesting conversation with ChatGPT about where BonBon fits into the history of the web. I was surprised how quickly it understood the full picture. It started filling in the blanks, so I asked it to summarize the story for others to read. That's what this document contains. DW
 
-- **BonBon goes back to the beginning of the Web.** In 1989, Tim Berners-Lee (TBL) proposed a simple, open system of linked documents. Anyone could publish, anyone could link, and anyone could invent new uses for it.
+- **BonBon goes back to the beginning of the Web.** In 1989, Tim Berners-Lee (TBL) proposed a simple, open system of linked documents. Anyone could publish, anyone could link, and anyone could invent new uses for it. 
 
 - **The original Web was remarkably open-ended.** There were few distinctions between kinds of documents. If you could imagine something, you could probably build it. The Web was a common environment for experimentation, not a collection of applications with predefined capabilities.
 
