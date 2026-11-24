@@ -1,0 +1,8 @@
+{
+	"myDomain": "build.bonbon.blog",
+	"opmlListUrl": "https://chat.bonbon.blog/data/subs.opml",
+	"blogsDomain": "bonbon.blog",
+	"blogsFolder": "../",
+	"reservedNames": ["chat", "build", "www"],
+	"ctMinutesBetwPolls": 1
+	}
