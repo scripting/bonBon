@@ -15,7 +15,7 @@
 	<head>
 		<title>BonBon</title>
 		<dateCreated>Mon, 12 Oct 2026 16:14:47 GMT</dateCreated>
-		<dateModified>Sun, 22 Nov 2026 15:18:53 GMT</dateModified>
+		<dateModified>Tue, 24 Nov 2026 17:46:31 GMT</dateModified>
 		<ownerId>http://davewiner.com/</ownerId>
 		</head>
 	<body>
@@ -23,7 +23,7 @@
 			<outline text="{">
 				<outline text="&quot;name&quot;: &quot;mdbrowser&quot;,"/>
 				<outline text="&quot;productName&quot;: &quot;BonBon&quot;,"/>
-				<outline text="&quot;version&quot;: &quot;0.6.56&quot;,"/>
+				<outline text="&quot;version&quot;: &quot;0.6.57&quot;,"/>
 				<outline text="&quot;description&quot;: &quot;A browser for a web made of Markdown files.&quot;,"/>
 				<outline text="&quot;main&quot;: &quot;main.js&quot;,"/>
 				<outline text="&quot;scripts&quot;: {">
