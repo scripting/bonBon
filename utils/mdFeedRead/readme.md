@@ -1,6 +1,6 @@
 # mdFeedRead
 
-*This page was written by Claude, working with Dave Winer. It's a draft.*
+*This page was written by Claude, working with Dave Winer.*
 
 ## How to use it
 
