@@ -1,0 +1,13 @@
+{
+	"name": "mdfeedread",
+	"description": "Give it the address of an RSS 2.0 feed and it answers with a page of Markdown, the items that have source:markdown, newest first.",
+	"author": "Dave Winer <dave@scripting.com>",
+	"main": "mdfeedread.js",
+	"license": "MIT",
+	"version": "0.4.1",
+	"dependencies": {
+		"davehttp": "*",
+		"daveutils": "*",
+		"reallysimple": "^0.5.5"
+		}
+	}
