@@ -32,8 +32,6 @@ The first time, Windows shows a blue box, "Windows protected your PC". Click Mor
 
 It's for 64-bit Windows 10 or 11.
 
-It has not been tested, if you try it, [let us know](https://github.com/scripting/bonBon/issues/21) how it works by posting a comment in Issues. 
-
 ### Raspberry download
 
 Download and expand [this zip file](https://github.com/scripting/bonBon/releases/latest/download/raspberry.zip).
@@ -41,6 +39,4 @@ Download and expand [this zip file](https://github.com/scripting/bonBon/releases
 Run the program named BonBon in the folder.
 
 It needs a 64-bit Raspberry Pi system. A 32-bit one can't run it. 
-
-It has not been tested, if you try it, [let us know](https://github.com/scripting/bonBon/issues/21) how it works by posting a comment in Issues. 
 
