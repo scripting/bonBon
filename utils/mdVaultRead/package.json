@@ -1,0 +1,13 @@
+{
+	"name": "mdvaultread",
+	"description": "Give it the GitHub address of an Obsidian vault and it answers with pages of Markdown, the vault's files with their [[links]] turned into real links.",
+	"author": "Dave Winer <dave@scripting.com>",
+	"main": "mdvaultread.js",
+	"license": "MIT",
+	"version": "0.4.0",
+	"dependencies": {
+		"davehttp": "*",
+		"daveutils": "*",
+		"request": "*"
+		}
+	}
