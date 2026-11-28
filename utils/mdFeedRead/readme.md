@@ -1,10 +1,6 @@
 # mdFeedRead
 
-*This page was written by Claude, working with Dave Winer. It's a draft.*
-
-Give it the address of an RSS 2.0 feed and it answers with one page of Markdown: the items in the feed, newest first.
-
-It's for reading in [BonBon](https://github.com/scripting/bonBon), or any browser for Markdown.
+*This page was written by Claude, working with Dave Winer.*
 
 ## How to use it
 
@@ -52,3 +48,7 @@ Every blog on micro.blog and every person on an rss.chat server has a feed that 
 It's a Node app. `npm install`, then run `mdfeedread.js` with the port in the `PORT` environment variable. Under PagePark, put the folder in the domains folder and PagePark starts it and gives it a port.
 
 `config.json` has one setting, `urlDefaultFeed`, the feed shown when the address doesn't name one.
+
+## Questions and comments
+
+Dave wrote about mdFeedRead in an issue on the BonBon repo: [More pieces joined: Feed to Markdown](https://github.com/scripting/bonBon/issues/26). That's the place for questions and comments.

@@ -73,6 +73,9 @@ contextBridge.exposeInMainWorld ("mdBrowser", {
 	showContextMenu: function (theParams) { //10/13/26 by CC -- {x, y, linkUrl}: the right-click menu, with Inspect; linkUrl when the click was on a link
 		return (ipcRenderer.invoke ("mdBrowser.showContextMenu", theParams));
 		},
+	showAddressMenu: function () { //11/27/26 by CC -- the right-click menu in the address bar: Cut, Copy, Paste, Paste and Go, Select All
+		return (ipcRenderer.invoke ("mdBrowser.showAddressMenu"));
+		},
 	getFavicon: function (theUrl) { //10/12/26 by CC -- the icon of the page's site as a data URL, or undefined when it has none
 		return (ipcRenderer.invoke ("mdBrowser.getFavicon", theUrl));
 		},

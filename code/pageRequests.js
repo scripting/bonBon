@@ -20,6 +20,8 @@ const http = require ("http");
 const opml = require ("opml"); //11/4/26 by CC -- Dave's package, for the table of contents' include nodes
 const https = require ("https");
 const zlib = require ("zlib"); //11/18/26 by CC -- for a page the server sends zipped
+const fs = require ("fs"); //11/27/26 by CC -- for a file on the reader's disk, see LOCAL FILES
+const urlTool = require ("url");
 const markdownConverter = require ("./markdownConverter.js");
 const frontMatter = require ("./frontMatter.js");
 
@@ -29,7 +31,9 @@ var options = {
 	cacheMinutes: undefined, //how long a site's icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs
 	electronNet: undefined, //11/21/26 by CC -- Electron's net module, when the caller is the app; requests are made with it, see WHOSE CERTIFICATES
 	maxTwinSearchBytes: 64 * 1024, //11/21/26 by CC -- how far into an HTML page isMarkdownUrl reads, looking for the line that names its Markdown copy
-	maxPdfBytes: 30 * 1024 * 1024 //11/21/26 by CC -- a PDF bigger than this isn't shown in the tab; it gets the page that offers the download
+	maxPdfBytes: 30 * 1024 * 1024, //11/21/26 by CC -- a PDF bigger than this isn't shown in the tab; it gets the page that offers the download
+	flLocalFiles: false, //11/27/26 by CC -- true when a file: address may be read from this machine's disk. The app says true. The demo's server never does: it's asked for pages by anyone on the web
+	maxLocalFileBytes: 30 * 1024 * 1024 //11/27/26 by CC -- a file on disk bigger than this isn't read into the tab
 	};
 
 function init (userOptions) {
@@ -491,6 +495,90 @@ function getServerErrorMessage (theResponse) { //11/12/26 by CC -- what to tell 
 	return ("Can't get the page because the server said \"" + theWords + ".\"");
 	}
 
+/*  11/27/26 by CC -- GITHUB'S MARKDOWN PAGES (issue 22, gorf2000). The
+	address of a Markdown file on github.com, the /blob/ kind, is an HTML
+	page about the file, not the file. GitHub itself answers the same
+	address with /raw/ in place of /blob/ by sending us to the file, so
+	that's what we ask for: we don't have to know where GitHub keeps its
+	raw files (Dave's worry: "could break if they change"). If the answer
+	isn't a Markdown page, the address is asked for as it was written.  */
+
+function getGitHubRawUrl (theUrl) { //the address that gives the Markdown for a github.com /blob/ page of a Markdown file; undefined for any other address
+	var parsedUrl;
+	try {
+		parsedUrl = new URL (theUrl);
+		}
+	catch (err) {
+		return (undefined);
+		}
+	const theHost = parsedUrl.hostname.toLowerCase ();
+	if ((theHost !== "github.com") && (theHost !== "www.github.com")) {
+		return (undefined);
+		}
+	const theParts = parsedUrl.pathname.split ("/"); //"", owner, repo, "blob", branch, the path...
+	const lowerPath = parsedUrl.pathname.toLowerCase ();
+	if ((theParts.length < 6) || (theParts [3] !== "blob") || !(lowerPath.endsWith (".md") || lowerPath.endsWith (".markdown"))) {
+		return (undefined);
+		}
+	theParts [3] = "raw";
+	return (parsedUrl.origin + theParts.join ("/"));
+	}
+
+/*  11/27/26 by CC -- LOCAL FILES. Open local file... in the app's File
+	menu (Dave: "it's really hard to read md files in raw code. wouldn't
+	it be nice if i could read them in bonbon"). A file: address is read
+	from the disk and handed on in the shape a server's answer has, so a
+	local page is drawn by the same code as one from the web: Markdown as
+	a page, code as a listing, a picture as a picture. There's no content
+	type, so the file's extension decides. Only when options.flLocalFiles
+	is true; see the note there.  */
+
+function isLocalFileUrl (theUrl) {
+	return ((typeof theUrl === "string") && (theUrl.toLowerCase ().indexOf ("file://") === 0));
+	}
+function isWebUrl (theUrl) {
+	return ((typeof theUrl === "string") && ((theUrl.indexOf ("http://") === 0) || (theUrl.indexOf ("https://") === 0)));
+	}
+function getLocalFile (theUrl, isBodyWanted, callback) { //callback (err, theResponse), theResponse shaped like httpGet's
+	var thePath;
+	if (!options.flLocalFiles) {
+		callback ({message: "Can't get " + theUrl + " because only http and https are supported."});
+		return;
+		}
+	try {
+		thePath = urlTool.fileURLToPath (theUrl);
+		}
+	catch (err) {
+		callback ({message: "Can't open " + theUrl + " because it isn't the address of a file on this computer."});
+		return;
+		}
+	fs.stat (thePath, function (err, theStats) {
+		if (err) {
+			callback ({message: "Can't open " + thePath + " because there's no file there."});
+			}
+		else if (theStats.isDirectory ()) {
+			callback ({message: "Can't open " + thePath + " because it's a folder, not a file."});
+			}
+		else {
+			const theResponse = {status: 200, url: theUrl, contentType: undefined, contentLocation: undefined, contentLength: theStats.size, headers: {}, body: Buffer.alloc (0)};
+			if ((theStats.size > options.maxLocalFileBytes) || !isBodyWanted (theUrl, undefined, theStats.size)) { //too big, or a kind we don't draw: it gets the page that says what it is
+				callback (undefined, theResponse);
+				}
+			else {
+				fs.readFile (thePath, function (err, theData) {
+					if (err) {
+						callback ({message: "Can't open " + thePath + " because the file couldn't be read."});
+						}
+					else {
+						theResponse.body = theData;
+						callback (undefined, theResponse);
+						}
+					});
+				}
+			}
+		});
+	}
+
 function getPage (theUrl, callback, flAsItCame=false) { //11/21/26: flAsItCame, for View Source: an HTML page is answered as the HTML, its Markdown copy isn't looked for. Answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind "file" {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder's address in the site's table of contents by its readme's
 	
 	/*  11/17/26 by CC -- NOT ACCEPTABLE. We ask every server for Markdown.
@@ -575,7 +663,24 @@ function getPage (theUrl, callback, flAsItCame=false) { //11/21/26: flAsItCame, 
 			}
 		}
 	
-	askForPage (theUrl, acceptForPage);
+	if (isLocalFileUrl (theUrl)) { //11/27/26 by CC -- LOCAL FILES
+		getLocalFile (theUrl, isBodyWantedForPage, gotResponse);
+		return;
+		}
+	const urlRaw = (flAsItCame) ? undefined : getGitHubRawUrl (theUrl); //11/27/26 by CC -- GITHUB'S MARKDOWN PAGES
+	if (urlRaw === undefined) {
+		askForPage (theUrl, acceptForPage);
+		}
+	else {
+		httpGet (urlRaw, 0, function (err, rawResponse) {
+			if ((!err) && (rawResponse.status === 200) && isMarkdownPage (rawResponse.url, rawResponse.contentType)) {
+				gotResponse (undefined, rawResponse);
+				}
+			else {
+				askForPage (theUrl, acceptForPage);
+				}
+			}, acceptForPage, false, isBodyWantedForPage);
+		}
 }
 
 /*  10/12/26 by CC -- FAVICONS. A site's icon comes from /favicon.ico at
@@ -614,6 +719,10 @@ function getImageType (theBuffer) { //what kind of image the bytes say this is, 
 
 function getFavicon (theUrl, callback) { //callback (theFavicon): a data URL, or undefined
 	var theOrigin;
+	if (!isWebUrl (theUrl)) { //11/27/26 by CC -- a file on disk has no site to ask
+		callback (undefined);
+		return;
+		}
 	try {
 		theOrigin = new URL (theUrl).origin;
 		}
@@ -775,6 +884,10 @@ function expandTocIncludes (opmltext, theOrigin, callback) { //11/4/26 by CC -- 
 
 function getToc (theUrl, callback) { //10/17/26 by CC -- the site's table of contents, an OPML outline at a well-known address (Dave, 10/17); callback (opmltext), undefined when the site has none; the shell parses it
 	var theOrigin;
+	if (!isWebUrl (theUrl)) { //11/27/26 by CC -- a file on disk has no site to ask
+		callback (undefined);
+		return;
+		}
 	try {
 		theOrigin = new URL (theUrl).origin;
 		}
@@ -814,7 +927,13 @@ function isMarkdownUrl (theUrl, callback) { //10/16/26 by CC -- does this addres
 		setCached (markdownUrlAnswers, theUrl, flMarkdown);
 		callback (flMarkdown);
 		}
-	httpGet (theUrl, 0, function (err, theResponse) {
+	if (isLocalFileUrl (theUrl)) { //11/27/26 by CC -- LOCAL FILES: the extension decides, and it isn't remembered, the file can come and go
+		callback (options.flLocalFiles && isMarkdownPage (theUrl, undefined));
+		return;
+		}
+	const urlRaw = getGitHubRawUrl (theUrl); //11/27/26 by CC -- GITHUB'S MARKDOWN PAGES: the question is asked of the address that gives the file
+	const urlToAsk = (urlRaw === undefined) ? theUrl : urlRaw;
+	httpGet (urlToAsk, 0, function (err, theResponse) {
 		if (err || (theResponse.status !== 200)) {
 			gotAnswer (false);
 			}
@@ -855,7 +974,15 @@ function getUrlStatus (theUrl, callback) { //11/10/26 by CC -- is there somethin
 		}, "text/markdown, text/x-opml", true); //headers only
 	}
 
+function emptyCaches () { //11/27/26 by CC -- start every cache over, empty. The demo's server calls this at the top of each hour (Dave: "what i have done is have the whole cache emptied at the top of the hour"). An old entry was only deleted when the same key was asked for again, so with crawlers walking the demo the caches only grew, to 830 MB in five days.
+	faviconCache = {};
+	tocCache = {};
+	markdownUrlAnswers = {};
+	urlStatusAnswers = {};
+	}
+
 exports.init = init;
+exports.emptyCaches = emptyCaches; //11/27/26 by CC
 exports.httpGet = httpGet;
 exports.isMarkdownPage = isMarkdownPage;
 exports.getMarkdownTwinUrl = getMarkdownTwinUrl; //11/21/26 by CC
@@ -865,3 +992,4 @@ exports.getFavicon = getFavicon;
 exports.getToc = getToc;
 exports.isMarkdownUrl = isMarkdownUrl;
 exports.getUrlStatus = getUrlStatus;
+exports.getGitHubRawUrl = getGitHubRawUrl; //11/27/26 by CC
