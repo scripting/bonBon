@@ -5,7 +5,7 @@
 	is made, where the charter's rules decide whether what came back is a
 	page, and where the Markdown becomes HTML.  */
 
-const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net} = require ("electron"); //11/21/26 by CC -- net, Electron's own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js
+const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net, dialog} = require ("electron"); //11/21/26 by CC -- net, Electron's own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js
 const fs = require ("fs");
 const pathTool = require ("path");
 const pageRequests = require ("./pageRequests.js"); //11/2/26 by CC -- the requests, the charter's rules about what counts as a page, favicons and the table of contents; they were in this file until the demo's server needed the same code
@@ -311,6 +311,8 @@ function buildMenu () {
 				{label: "New Tab", accelerator: "CmdOrCtrl+T", click: function () {sendCommand ("newTab");}},
 				{label: "Close Tab", accelerator: "CmdOrCtrl+W", click: function () {sendCommand ("closeTab");}},
 				{type: "separator"},
+				{label: "Open local file...", click: openLocalFileCommand}, //no key, Dave 11/28/26: "open local file should not be cmd-o"; 11/27/26 by CC -- Dave: "add a command to the File menu, before Open data file with a separator, name of command Open local file..."
+				{type: "separator"},
 				{label: "Open Data Folder", click: function () {shell.openPath (app.getPath ("userData"));}} //10/16/26 by CC -- where config.json, tabs, bookmarks and history live
 				]
 			},
@@ -535,6 +537,45 @@ ipcMain.handle ("mdBrowser.showContextMenu", function (event, theParams) {
 	Menu.buildFromTemplate (theTemplate).popup ({window: mainWindow});
 	});
 
+/*  11/27/26 by CC -- the right-click menu in the address bar (issue 23,
+	gorf2000; Dave: "i expect right click to get a menu"). Chrome's: Cut,
+	Copy, Paste, Paste and Go, Select All.  */
+
+ipcMain.handle ("mdBrowser.showAddressMenu", function (event) {
+	const theClipboardText = clipboard.readText ().trim ();
+	const theTemplate = [
+		{role: "cut"},
+		{role: "copy"},
+		{role: "paste"},
+		{label: "Paste and Go", enabled: theClipboardText.length > 0, click: function () {sendCommand ("openUrl", theClipboardText);}},
+		{type: "separator"},
+		{role: "selectAll"}
+		];
+	Menu.buildFromTemplate (theTemplate).popup ({window: mainWindow});
+	});
+
+/*  11/27/26 by CC -- OPEN LOCAL FILE. The system's file dialog; the file
+	chosen opens in a tab, by its file: address. The reading is done in
+	pageRequests.js, see LOCAL FILES there.  */
+
+function openLocalFileCommand () {
+	if (mainWindow === undefined) {
+		return;
+		}
+	dialog.showOpenDialog (mainWindow, {
+		title: "Open local file",
+		properties: ["openFile"],
+		filters: [
+			{name: "Markdown", extensions: ["md", "markdown"]},
+			{name: "All Files", extensions: ["*"]}
+			]
+		}).then (function (theResult) {
+			if (!theResult.canceled && (theResult.filePaths.length > 0)) {
+				sendCommand ("openFile", require ("url").pathToFileURL (theResult.filePaths [0]).href);
+				}
+			});
+	}
+
 ipcMain.handle ("mdBrowser.getFavicon", function (event, theUrl) {
 	return (new Promise (function (resolve) {
 		pageRequests.getFavicon (theUrl, resolve);
@@ -661,7 +702,7 @@ app.on ("open-url", function (event, theUrl) {
 
 app.whenReady ().then (function () {
 	readConfig ();
-	pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: "Markdown Browser/" + app.getVersion (), electronNet: net}); //11/2/26 by CC -- what the requests need from the app; the demo's server sets its own
+	pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: "Markdown Browser/" + app.getVersion (), electronNet: net, flLocalFiles: true}); //11/2/26 by CC -- what the requests need from the app; the demo's server sets its own
 	moveDataFromOldName ();
 	seedStylesheets (); //10/27/26 by CC
 	pageHandlers.init ({extensionsForTypes: config.extensionsForTypes, ctSecsHandlerTimeout: config.ctSecsHandlerTimeout}); //11/19/26 by CC

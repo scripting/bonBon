@@ -1,7 +1,7 @@
 {
 	"name": "mdbrowser",
 	"productName": "BonBon",
-	"version": "0.6.57",
+	"version": "0.6.58",
 	"description": "A browser for a web made of Markdown files.",
 	"main": "main.js",
 	"scripts": {

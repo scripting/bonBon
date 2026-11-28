@@ -46,9 +46,15 @@ const prefixViewSource = "view-source:"; //10/16/26 by CC -- a view-source: addr
 const secsUpdateSocketRetry = 30; //10/26/26 by CC -- how long a tab waits before opening its update socket again after it drops
 const dragTypeTab = "application/x-mdbrowser-tab"; //10/12/26 by CC -- what a tab being dragged carries, besides its URL: its place in the row
 
+function isLocalFileUrl (theUrl) { //11/27/26 by CC -- the address of a file on the reader's disk, from Open local file...
+	return ((typeof theUrl === "string") && (theUrl.toLowerCase ().indexOf ("file://") === 0));
+	}
 function fixUrl (theUrl) { //what a browser does with "scripting.com" -- try it as http
 	theUrl = theUrl.trim ();
-	if ((theUrl.indexOf ("http://") !== 0) && (theUrl.indexOf ("https://") !== 0) && (theUrl.indexOf (prefixViewSource) !== 0)) {
+	if (theUrl.toLowerCase ().indexOf ("bon://") === 0) { //11/27/26 by CC -- a bon:// address typed or pasted into the address bar (issue 20, gorf2000): it's the same page at http, as it is when a bon:// link is clicked outside the app
+		return ("http://" + theUrl.substr ("bon://".length));
+		}
+	if ((theUrl.indexOf ("http://") !== 0) && (theUrl.indexOf ("https://") !== 0) && (theUrl.indexOf (prefixViewSource) !== 0) && !isLocalFileUrl (theUrl)) {
 		theUrl = "http://" + theUrl;
 		}
 	return (theUrl);
@@ -232,6 +238,10 @@ function followLink (theTab, theUrl, flNewTab) { //11/5/26 by CC -- a click on a
 		else {
 			loadUrl (theTab, urlToLoad, false, false, true); //11/12/26 by CC -- flFromLink: an HTML page reached by a click goes to the reader's browser
 			}
+		}
+	if (isLocalFileUrl (theUrl) && !isLocalFileUrl (theTab.url)) { //11/27/26 by CC -- a page on the web can't open a file on the reader's disk; a local page can link to its neighbors
+		alertDialog ("Can't open " + encodeXml (theUrl) + " because a page on the web can't link to a file on your computer.");
+		return;
 		}
 	const urlMirror = getMirrorUrl (theTab, theUrl);
 	if (urlMirror === undefined) {
@@ -718,6 +728,9 @@ function resolvePageUrls (theTab) { //10/14/26 by CC -- a relative link or image
 			const theAttribute = (theElement.tagName === "A") ? "href" : "src";
 			try {
 				theElement.setAttribute (theAttribute, new URL (theElement.getAttribute (theAttribute), theTab.url).href);
+				if ((theElement.tagName === "IMG") && isLocalFileUrl (theElement.getAttribute ("src")) && !isLocalFileUrl (theTab.url)) { //11/27/26 by CC -- a page on the web doesn't get to show a picture from the reader's disk
+					theElement.removeAttribute ("src");
+					}
 				}
 			catch (err) { //not a URL we can make sense of; leave it as written
 				}
@@ -1866,6 +1879,9 @@ function preloadImages (htmltext, baseUrl) { //10/16/26 by CC -- a promise that 
 			}
 		catch (err) {
 			}
+		if (isLocalFileUrl (theUrl) && !isLocalFileUrl (baseUrl)) { //11/27/26 by CC -- a page on the web doesn't get a picture from the reader's disk, see resolvePageUrls
+			return;
+			}
 		theLoads.push (new Promise (function (resolve) {
 			const loader = new Image ();
 			loader.onload = resolve;
@@ -2804,6 +2820,13 @@ function startup () {
 				break;
 			}
 		});
+	inputAddress.addEventListener ("contextmenu", function (event) { //11/27/26 by CC -- the right-click menu in the address bar, the app shows it; in the demo the historic browser's own menu comes up
+		if (window.mdBrowser.showAddressMenu !== undefined) {
+			event.preventDefault ();
+			hideTypeahead ();
+			window.mdBrowser.showAddressMenu ();
+			}
+		});
 	inputAddress.addEventListener ("input", showTypeahead); //10/18/26 by CC
 	inputAddress.addEventListener ("blur", function () {
 		setTimeout (hideTypeahead, 150); //after a mousedown on a row has had its turn
@@ -2868,6 +2891,14 @@ function startup () {
 				break;
 			case "openUrlInNewTab": //from the right-click menu on a link
 				openUrlInNewTab (theParam, true);
+				break;
+			case "openFile": //11/27/26 by CC -- Open local file... in the File menu: in this tab when it's empty, otherwise in a new one, in front
+				if (currentTab ().url === undefined) {
+					loadUrl (currentTab (), theParam);
+					}
+				else {
+					openUrlInNewTab (theParam, false);
+					}
 				break;
 			}
 		});

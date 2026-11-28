@@ -15,7 +15,7 @@
 	<head>
 		<title>BonBon</title>
 		<dateCreated>Mon, 12 Oct 2026 16:14:47 GMT</dateCreated>
-		<dateModified>Tue, 24 Nov 2026 17:46:31 GMT</dateModified>
+		<dateModified>Sat, 28 Nov 2026 15:29:12 GMT</dateModified>
 		<ownerId>http://davewiner.com/</ownerId>
 		</head>
 	<body>
@@ -23,7 +23,7 @@
 			<outline text="{">
 				<outline text="&quot;name&quot;: &quot;mdbrowser&quot;,"/>
 				<outline text="&quot;productName&quot;: &quot;BonBon&quot;,"/>
-				<outline text="&quot;version&quot;: &quot;0.6.57&quot;,"/>
+				<outline text="&quot;version&quot;: &quot;0.6.58&quot;,"/>
 				<outline text="&quot;description&quot;: &quot;A browser for a web made of Markdown files.&quot;,"/>
 				<outline text="&quot;main&quot;: &quot;main.js&quot;,"/>
 				<outline text="&quot;scripts&quot;: {">
@@ -80,7 +80,7 @@
 				<outline text="page, and where the Markdown becomes HTML.  */"/>
 				</outline>
 			<outline text=""/>
-			<outline text="const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net} = require (&quot;electron&quot;); //11/21/26 by CC -- net, Electron&apos;s own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js"/>
+			<outline text="const {app, BrowserWindow, Menu, ipcMain, clipboard, shell, net, dialog} = require (&quot;electron&quot;); //11/21/26 by CC -- net, Electron&apos;s own network code, which the requests go through; see WHOSE CERTIFICATES in pageRequests.js"/>
 			<outline text="const fs = require (&quot;fs&quot;);"/>
 			<outline text="const pathTool = require (&quot;path&quot;);"/>
 			<outline text="const pageRequests = require (&quot;./pageRequests.js&quot;); //11/2/26 by CC -- the requests, the charter&apos;s rules about what counts as a page, favicons and the table of contents; they were in this file until the demo&apos;s server needed the same code"/>
@@ -461,6 +461,8 @@
 							<outline text="{label: &quot;New Tab&quot;, accelerator: &quot;CmdOrCtrl+T&quot;, click: function () {sendCommand (&quot;newTab&quot;);}},"/>
 							<outline text="{label: &quot;Close Tab&quot;, accelerator: &quot;CmdOrCtrl+W&quot;, click: function () {sendCommand (&quot;closeTab&quot;);}},"/>
 							<outline text="{type: &quot;separator&quot;},"/>
+							<outline text="{label: &quot;Open local file...&quot;, click: openLocalFileCommand}, //no key, Dave 11/28/26: &quot;open local file should not be cmd-o&quot;; 11/27/26 by CC -- Dave: &quot;add a command to the File menu, before Open data file with a separator, name of command Open local file...&quot;"/>
+							<outline text="{type: &quot;separator&quot;},"/>
 							<outline text="{label: &quot;Open Data Folder&quot;, click: function () {shell.openPath (app.getPath (&quot;userData&quot;));}} //10/16/26 by CC -- where config.json, tabs, bookmarks and history live"/>
 							<outline text="]"/>
 							</outline>
@@ -743,6 +745,55 @@
 				<outline text="});"/>
 				</outline>
 			<outline text=""/>
+			<outline text="/*  11/27/26 by CC -- the right-click menu in the address bar (issue 23,">
+				<outline text="gorf2000; Dave: &quot;i expect right click to get a menu&quot;). Chrome&apos;s: Cut,"/>
+				<outline text="Copy, Paste, Paste and Go, Select All.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="ipcMain.handle (&quot;mdBrowser.showAddressMenu&quot;, function (event) {">
+				<outline text="const theClipboardText = clipboard.readText ().trim ();"/>
+				<outline text="const theTemplate = [">
+					<outline text="{role: &quot;cut&quot;},"/>
+					<outline text="{role: &quot;copy&quot;},"/>
+					<outline text="{role: &quot;paste&quot;},"/>
+					<outline text="{label: &quot;Paste and Go&quot;, enabled: theClipboardText.length &gt; 0, click: function () {sendCommand (&quot;openUrl&quot;, theClipboardText);}},"/>
+					<outline text="{type: &quot;separator&quot;},"/>
+					<outline text="{role: &quot;selectAll&quot;}"/>
+					<outline text="];"/>
+					</outline>
+				<outline text="Menu.buildFromTemplate (theTemplate).popup ({window: mainWindow});"/>
+				<outline text="});"/>
+				</outline>
+			<outline text=""/>
+			<outline text="/*  11/27/26 by CC -- OPEN LOCAL FILE. The system&apos;s file dialog; the file">
+				<outline text="chosen opens in a tab, by its file: address. The reading is done in"/>
+				<outline text="pageRequests.js, see LOCAL FILES there.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function openLocalFileCommand () {">
+				<outline text="if (mainWindow === undefined) {">
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="dialog.showOpenDialog (mainWindow, {">
+					<outline text="title: &quot;Open local file&quot;,"/>
+					<outline text="properties: [&quot;openFile&quot;],"/>
+					<outline text="filters: [">
+						<outline text="{name: &quot;Markdown&quot;, extensions: [&quot;md&quot;, &quot;markdown&quot;]},"/>
+						<outline text="{name: &quot;All Files&quot;, extensions: [&quot;*&quot;]}"/>
+						<outline text="]"/>
+						</outline>
+					<outline text="}).then (function (theResult) {">
+						<outline text="if (!theResult.canceled &amp;&amp; (theResult.filePaths.length &gt; 0)) {">
+							<outline text="sendCommand (&quot;openFile&quot;, require (&quot;url&quot;).pathToFileURL (theResult.filePaths [0]).href);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="});"/>
+						</outline>
+					</outline>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
 			<outline text="ipcMain.handle (&quot;mdBrowser.getFavicon&quot;, function (event, theUrl) {">
 				<outline text="return (new Promise (function (resolve) {">
 					<outline text="pageRequests.getFavicon (theUrl, resolve);"/>
@@ -904,7 +955,7 @@
 			<outline text=""/>
 			<outline text="app.whenReady ().then (function () {">
 				<outline text="readConfig ();"/>
-				<outline text="pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: &quot;Markdown Browser/&quot; + app.getVersion (), electronNet: net}); //11/2/26 by CC -- what the requests need from the app; the demo&apos;s server sets its own"/>
+				<outline text="pageRequests.init ({maxRedirects: config.maxRedirects, userAgent: &quot;Markdown Browser/&quot; + app.getVersion (), electronNet: net, flLocalFiles: true}); //11/2/26 by CC -- what the requests need from the app; the demo&apos;s server sets its own"/>
 				<outline text="moveDataFromOldName ();"/>
 				<outline text="seedStylesheets (); //10/27/26 by CC"/>
 				<outline text="pageHandlers.init ({extensionsForTypes: config.extensionsForTypes, ctSecsHandlerTimeout: config.ctSecsHandlerTimeout}); //11/19/26 by CC"/>
@@ -952,6 +1003,8 @@
 			<outline text="const opml = require (&quot;opml&quot;); //11/4/26 by CC -- Dave&apos;s package, for the table of contents&apos; include nodes"/>
 			<outline text="const https = require (&quot;https&quot;);"/>
 			<outline text="const zlib = require (&quot;zlib&quot;); //11/18/26 by CC -- for a page the server sends zipped"/>
+			<outline text="const fs = require (&quot;fs&quot;); //11/27/26 by CC -- for a file on the reader&apos;s disk, see LOCAL FILES"/>
+			<outline text="const urlTool = require (&quot;url&quot;);"/>
 			<outline text="const markdownConverter = require (&quot;./markdownConverter.js&quot;);"/>
 			<outline text="const frontMatter = require (&quot;./frontMatter.js&quot;);"/>
 			<outline text=""/>
@@ -961,7 +1014,9 @@
 				<outline text="cacheMinutes: undefined, //how long a site&apos;s icon, table of contents and isMarkdownUrl answers are kept; undefined means as long as the process runs"/>
 				<outline text="electronNet: undefined, //11/21/26 by CC -- Electron&apos;s net module, when the caller is the app; requests are made with it, see WHOSE CERTIFICATES"/>
 				<outline text="maxTwinSearchBytes: 64 * 1024, //11/21/26 by CC -- how far into an HTML page isMarkdownUrl reads, looking for the line that names its Markdown copy"/>
-				<outline text="maxPdfBytes: 30 * 1024 * 1024 //11/21/26 by CC -- a PDF bigger than this isn&apos;t shown in the tab; it gets the page that offers the download"/>
+				<outline text="maxPdfBytes: 30 * 1024 * 1024, //11/21/26 by CC -- a PDF bigger than this isn&apos;t shown in the tab; it gets the page that offers the download"/>
+				<outline text="flLocalFiles: false, //11/27/26 by CC -- true when a file: address may be read from this machine&apos;s disk. The app says true. The demo&apos;s server never does: it&apos;s asked for pages by anyone on the web"/>
+				<outline text="maxLocalFileBytes: 30 * 1024 * 1024 //11/27/26 by CC -- a file on disk bigger than this isn&apos;t read into the tab"/>
 				<outline text="};"/>
 				</outline>
 			<outline text=""/>
@@ -1543,6 +1598,112 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
+			<outline text="/*  11/27/26 by CC -- GITHUB&apos;S MARKDOWN PAGES (issue 22, gorf2000). The">
+				<outline text="address of a Markdown file on github.com, the /blob/ kind, is an HTML"/>
+				<outline text="page about the file, not the file. GitHub itself answers the same"/>
+				<outline text="address with /raw/ in place of /blob/ by sending us to the file, so"/>
+				<outline text="that&apos;s what we ask for: we don&apos;t have to know where GitHub keeps its"/>
+				<outline text="raw files (Dave&apos;s worry: &quot;could break if they change&quot;). If the answer"/>
+				<outline text="isn&apos;t a Markdown page, the address is asked for as it was written.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function getGitHubRawUrl (theUrl) { //the address that gives the Markdown for a github.com /blob/ page of a Markdown file; undefined for any other address">
+				<outline text="var parsedUrl;"/>
+				<outline text="try {">
+					<outline text="parsedUrl = new URL (theUrl);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="catch (err) {">
+					<outline text="return (undefined);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="const theHost = parsedUrl.hostname.toLowerCase ();"/>
+				<outline text="if ((theHost !== &quot;github.com&quot;) &amp;&amp; (theHost !== &quot;www.github.com&quot;)) {">
+					<outline text="return (undefined);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="const theParts = parsedUrl.pathname.split (&quot;/&quot;); //&quot;&quot;, owner, repo, &quot;blob&quot;, branch, the path..."/>
+				<outline text="const lowerPath = parsedUrl.pathname.toLowerCase ();"/>
+				<outline text="if ((theParts.length &lt; 6) || (theParts [3] !== &quot;blob&quot;) || !(lowerPath.endsWith (&quot;.md&quot;) || lowerPath.endsWith (&quot;.markdown&quot;))) {">
+					<outline text="return (undefined);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="theParts [3] = &quot;raw&quot;;"/>
+				<outline text="return (parsedUrl.origin + theParts.join (&quot;/&quot;));"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
+			<outline text="/*  11/27/26 by CC -- LOCAL FILES. Open local file... in the app&apos;s File">
+				<outline text="menu (Dave: &quot;it&apos;s really hard to read md files in raw code. wouldn&apos;t"/>
+				<outline text="it be nice if i could read them in bonbon&quot;). A file: address is read"/>
+				<outline text="from the disk and handed on in the shape a server&apos;s answer has, so a"/>
+				<outline text="local page is drawn by the same code as one from the web: Markdown as"/>
+				<outline text="a page, code as a listing, a picture as a picture. There&apos;s no content"/>
+				<outline text="type, so the file&apos;s extension decides. Only when options.flLocalFiles"/>
+				<outline text="is true; see the note there.  */"/>
+				</outline>
+			<outline text=""/>
+			<outline text="function isLocalFileUrl (theUrl) {">
+				<outline text="return ((typeof theUrl === &quot;string&quot;) &amp;&amp; (theUrl.toLowerCase ().indexOf (&quot;file://&quot;) === 0));"/>
+				<outline text="}"/>
+				</outline>
+			<outline text="function isWebUrl (theUrl) {">
+				<outline text="return ((typeof theUrl === &quot;string&quot;) &amp;&amp; ((theUrl.indexOf (&quot;http://&quot;) === 0) || (theUrl.indexOf (&quot;https://&quot;) === 0)));"/>
+				<outline text="}"/>
+				</outline>
+			<outline text="function getLocalFile (theUrl, isBodyWanted, callback) { //callback (err, theResponse), theResponse shaped like httpGet&apos;s">
+				<outline text="var thePath;"/>
+				<outline text="if (!options.flLocalFiles) {">
+					<outline text="callback ({message: &quot;Can&apos;t get &quot; + theUrl + &quot; because only http and https are supported.&quot;});"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="try {">
+					<outline text="thePath = urlTool.fileURLToPath (theUrl);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="catch (err) {">
+					<outline text="callback ({message: &quot;Can&apos;t open &quot; + theUrl + &quot; because it isn&apos;t the address of a file on this computer.&quot;});"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="fs.stat (thePath, function (err, theStats) {">
+					<outline text="if (err) {">
+						<outline text="callback ({message: &quot;Can&apos;t open &quot; + thePath + &quot; because there&apos;s no file there.&quot;});"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else if (theStats.isDirectory ()) {">
+						<outline text="callback ({message: &quot;Can&apos;t open &quot; + thePath + &quot; because it&apos;s a folder, not a file.&quot;});"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="else {">
+						<outline text="const theResponse = {status: 200, url: theUrl, contentType: undefined, contentLocation: undefined, contentLength: theStats.size, headers: {}, body: Buffer.alloc (0)};"/>
+						<outline text="if ((theStats.size &gt; options.maxLocalFileBytes) || !isBodyWanted (theUrl, undefined, theStats.size)) { //too big, or a kind we don&apos;t draw: it gets the page that says what it is">
+							<outline text="callback (undefined, theResponse);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="else {">
+							<outline text="fs.readFile (thePath, function (err, theData) {">
+								<outline text="if (err) {">
+									<outline text="callback ({message: &quot;Can&apos;t open &quot; + thePath + &quot; because the file couldn&apos;t be read.&quot;});"/>
+									<outline text="}"/>
+									</outline>
+								<outline text="else {">
+									<outline text="theResponse.body = theData;"/>
+									<outline text="callback (undefined, theResponse);"/>
+									<outline text="}"/>
+									</outline>
+								<outline text="});"/>
+								</outline>
+							<outline text="}"/>
+							</outline>
+						<outline text="}"/>
+						</outline>
+					<outline text="});"/>
+					</outline>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
 			<outline text="function getPage (theUrl, callback, flAsItCame=false) { //11/21/26: flAsItCame, for View Source: an HTML page is answered as the HTML, its Markdown copy isn&apos;t looked for. Answers {flOk, url, frontMatter, html, source}, or {flOk, kind, url, title, source or imageData}, or for kind &quot;file&quot; {flOk, kind, url, title, contentType, size}, or {flOk: false, url, status, message}. 11/10/26: every flOk answer has urlContentLocation when the server named the file it sent, so the shell can find a folder&apos;s address in the site&apos;s table of contents by its readme&apos;s">
 				<outline text=""/>
 				<outline text="/*  11/17/26 by CC -- NOT ACCEPTABLE. We ask every server for Markdown.">
@@ -1652,7 +1813,30 @@
 					<outline text="}"/>
 					</outline>
 				<outline text=""/>
-				<outline text="askForPage (theUrl, acceptForPage);"/>
+				<outline text="if (isLocalFileUrl (theUrl)) { //11/27/26 by CC -- LOCAL FILES">
+					<outline text="getLocalFile (theUrl, isBodyWantedForPage, gotResponse);"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="const urlRaw = (flAsItCame) ? undefined : getGitHubRawUrl (theUrl); //11/27/26 by CC -- GITHUB&apos;S MARKDOWN PAGES"/>
+				<outline text="if (urlRaw === undefined) {">
+					<outline text="askForPage (theUrl, acceptForPage);"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="else {">
+					<outline text="httpGet (urlRaw, 0, function (err, rawResponse) {">
+						<outline text="if ((!err) &amp;&amp; (rawResponse.status === 200) &amp;&amp; isMarkdownPage (rawResponse.url, rawResponse.contentType)) {">
+							<outline text="gotResponse (undefined, rawResponse);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="else {">
+							<outline text="askForPage (theUrl, acceptForPage);"/>
+							<outline text="}"/>
+							</outline>
+						<outline text="}, acceptForPage, false, isBodyWantedForPage);"/>
+						</outline>
+					<outline text="}"/>
+					</outline>
 				</outline>
 			<outline text="}"/>
 			<outline text=""/>
@@ -1701,6 +1885,11 @@
 			<outline text=""/>
 			<outline text="function getFavicon (theUrl, callback) { //callback (theFavicon): a data URL, or undefined">
 				<outline text="var theOrigin;"/>
+				<outline text="if (!isWebUrl (theUrl)) { //11/27/26 by CC -- a file on disk has no site to ask">
+					<outline text="callback (undefined);"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
 				<outline text="try {">
 					<outline text="theOrigin = new URL (theUrl).origin;"/>
 					<outline text="}"/>
@@ -1907,6 +2096,11 @@
 			<outline text=""/>
 			<outline text="function getToc (theUrl, callback) { //10/17/26 by CC -- the site&apos;s table of contents, an OPML outline at a well-known address (Dave, 10/17); callback (opmltext), undefined when the site has none; the shell parses it">
 				<outline text="var theOrigin;"/>
+				<outline text="if (!isWebUrl (theUrl)) { //11/27/26 by CC -- a file on disk has no site to ask">
+					<outline text="callback (undefined);"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
 				<outline text="try {">
 					<outline text="theOrigin = new URL (theUrl).origin;"/>
 					<outline text="}"/>
@@ -1956,7 +2150,14 @@
 					<outline text="callback (flMarkdown);"/>
 					<outline text="}"/>
 					</outline>
-				<outline text="httpGet (theUrl, 0, function (err, theResponse) {">
+				<outline text="if (isLocalFileUrl (theUrl)) { //11/27/26 by CC -- LOCAL FILES: the extension decides, and it isn&apos;t remembered, the file can come and go">
+					<outline text="callback (options.flLocalFiles &amp;&amp; isMarkdownPage (theUrl, undefined));"/>
+					<outline text="return;"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="const urlRaw = getGitHubRawUrl (theUrl); //11/27/26 by CC -- GITHUB&apos;S MARKDOWN PAGES: the question is asked of the address that gives the file"/>
+				<outline text="const urlToAsk = (urlRaw === undefined) ? theUrl : urlRaw;"/>
+				<outline text="httpGet (urlToAsk, 0, function (err, theResponse) {">
 					<outline text="if (err || (theResponse.status !== 200)) {">
 						<outline text="gotAnswer (false);"/>
 						<outline text="}"/>
@@ -2010,7 +2211,16 @@
 				<outline text="}"/>
 				</outline>
 			<outline text=""/>
+			<outline text="function emptyCaches () { //11/27/26 by CC -- start every cache over, empty. The demo&apos;s server calls this at the top of each hour (Dave: &quot;what i have done is have the whole cache emptied at the top of the hour&quot;). An old entry was only deleted when the same key was asked for again, so with crawlers walking the demo the caches only grew, to 830 MB in five days.">
+				<outline text="faviconCache = {};"/>
+				<outline text="tocCache = {};"/>
+				<outline text="markdownUrlAnswers = {};"/>
+				<outline text="urlStatusAnswers = {};"/>
+				<outline text="}"/>
+				</outline>
+			<outline text=""/>
 			<outline text="exports.init = init;"/>
+			<outline text="exports.emptyCaches = emptyCaches; //11/27/26 by CC"/>
 			<outline text="exports.httpGet = httpGet;"/>
 			<outline text="exports.isMarkdownPage = isMarkdownPage;"/>
 			<outline text="exports.getMarkdownTwinUrl = getMarkdownTwinUrl; //11/21/26 by CC"/>
@@ -2020,6 +2230,7 @@
 			<outline text="exports.getToc = getToc;"/>
 			<outline text="exports.isMarkdownUrl = isMarkdownUrl;"/>
 			<outline text="exports.getUrlStatus = getUrlStatus;"/>
+			<outline text="exports.getGitHubRawUrl = getGitHubRawUrl; //11/27/26 by CC"/>
 			</outline>
 		<outline text="pageHandlers.js">
 			<outline text="/*  pageHandlers.js -- 11/19/26 by CC"/>
@@ -2693,6 +2904,10 @@
 					</outline>
 				<outline text="showContextMenu: function (theParams) { //10/13/26 by CC -- {x, y, linkUrl}: the right-click menu, with Inspect; linkUrl when the click was on a link">
 					<outline text="return (ipcRenderer.invoke (&quot;mdBrowser.showContextMenu&quot;, theParams));"/>
+					<outline text="},"/>
+					</outline>
+				<outline text="showAddressMenu: function () { //11/27/26 by CC -- the right-click menu in the address bar: Cut, Copy, Paste, Paste and Go, Select All">
+					<outline text="return (ipcRenderer.invoke (&quot;mdBrowser.showAddressMenu&quot;));"/>
 					<outline text="},"/>
 					</outline>
 				<outline text="getFavicon: function (theUrl) { //10/12/26 by CC -- the icon of the page&apos;s site as a data URL, or undefined when it has none">
@@ -4046,9 +4261,17 @@
 			<outline text="const secsUpdateSocketRetry = 30; //10/26/26 by CC -- how long a tab waits before opening its update socket again after it drops"/>
 			<outline text="const dragTypeTab = &quot;application/x-mdbrowser-tab&quot;; //10/12/26 by CC -- what a tab being dragged carries, besides its URL: its place in the row"/>
 			<outline text=""/>
+			<outline text="function isLocalFileUrl (theUrl) { //11/27/26 by CC -- the address of a file on the reader&apos;s disk, from Open local file...">
+				<outline text="return ((typeof theUrl === &quot;string&quot;) &amp;&amp; (theUrl.toLowerCase ().indexOf (&quot;file://&quot;) === 0));"/>
+				<outline text="}"/>
+				</outline>
 			<outline text="function fixUrl (theUrl) { //what a browser does with &quot;scripting.com&quot; -- try it as http">
 				<outline text="theUrl = theUrl.trim ();"/>
-				<outline text="if ((theUrl.indexOf (&quot;http://&quot;) !== 0) &amp;&amp; (theUrl.indexOf (&quot;https://&quot;) !== 0) &amp;&amp; (theUrl.indexOf (prefixViewSource) !== 0)) {">
+				<outline text="if (theUrl.toLowerCase ().indexOf (&quot;bon://&quot;) === 0) { //11/27/26 by CC -- a bon:// address typed or pasted into the address bar (issue 20, gorf2000): it&apos;s the same page at http, as it is when a bon:// link is clicked outside the app">
+					<outline text="return (&quot;http://&quot; + theUrl.substr (&quot;bon://&quot;.length));"/>
+					<outline text="}"/>
+					</outline>
+				<outline text="if ((theUrl.indexOf (&quot;http://&quot;) !== 0) &amp;&amp; (theUrl.indexOf (&quot;https://&quot;) !== 0) &amp;&amp; (theUrl.indexOf (prefixViewSource) !== 0) &amp;&amp; !isLocalFileUrl (theUrl)) {">
 					<outline text="theUrl = &quot;http://&quot; + theUrl;"/>
 					<outline text="}"/>
 					</outline>
@@ -4276,6 +4499,11 @@
 						<outline text="loadUrl (theTab, urlToLoad, false, false, true); //11/12/26 by CC -- flFromLink: an HTML page reached by a click goes to the reader&apos;s browser"/>
 						<outline text="}"/>
 						</outline>
+					<outline text="}"/>
+					</outline>
+				<outline text="if (isLocalFileUrl (theUrl) &amp;&amp; !isLocalFileUrl (theTab.url)) { //11/27/26 by CC -- a page on the web can&apos;t open a file on the reader&apos;s disk; a local page can link to its neighbors">
+					<outline text="alertDialog (&quot;Can&apos;t open &quot; + encodeXml (theUrl) + &quot; because a page on the web can&apos;t link to a file on your computer.&quot;);"/>
+					<outline text="return;"/>
 					<outline text="}"/>
 					</outline>
 				<outline text="const urlMirror = getMirrorUrl (theTab, theUrl);"/>
@@ -4870,6 +5098,10 @@
 						<outline text="const theAttribute = (theElement.tagName === &quot;A&quot;) ? &quot;href&quot; : &quot;src&quot;;"/>
 						<outline text="try {">
 							<outline text="theElement.setAttribute (theAttribute, new URL (theElement.getAttribute (theAttribute), theTab.url).href);"/>
+							<outline text="if ((theElement.tagName === &quot;IMG&quot;) &amp;&amp; isLocalFileUrl (theElement.getAttribute (&quot;src&quot;)) &amp;&amp; !isLocalFileUrl (theTab.url)) { //11/27/26 by CC -- a page on the web doesn&apos;t get to show a picture from the reader&apos;s disk">
+								<outline text="theElement.removeAttribute (&quot;src&quot;);"/>
+								<outline text="}"/>
+								</outline>
 							<outline text="}"/>
 							</outline>
 						<outline text="catch (err) { //not a URL we can make sense of; leave it as written">
@@ -6263,6 +6495,10 @@
 					<outline text="catch (err) {">
 						<outline text="}"/>
 						</outline>
+					<outline text="if (isLocalFileUrl (theUrl) &amp;&amp; !isLocalFileUrl (baseUrl)) { //11/27/26 by CC -- a page on the web doesn&apos;t get a picture from the reader&apos;s disk, see resolvePageUrls">
+						<outline text="return;"/>
+						<outline text="}"/>
+						</outline>
 					<outline text="theLoads.push (new Promise (function (resolve) {">
 						<outline text="const loader = new Image ();"/>
 						<outline text="loader.onload = resolve;"/>
@@ -7429,6 +7665,15 @@
 						</outline>
 					<outline text="});"/>
 					</outline>
+				<outline text="inputAddress.addEventListener (&quot;contextmenu&quot;, function (event) { //11/27/26 by CC -- the right-click menu in the address bar, the app shows it; in the demo the historic browser&apos;s own menu comes up">
+					<outline text="if (window.mdBrowser.showAddressMenu !== undefined) {">
+						<outline text="event.preventDefault ();"/>
+						<outline text="hideTypeahead ();"/>
+						<outline text="window.mdBrowser.showAddressMenu ();"/>
+						<outline text="}"/>
+						</outline>
+					<outline text="});"/>
+					</outline>
 				<outline text="inputAddress.addEventListener (&quot;input&quot;, showTypeahead); //10/18/26 by CC"/>
 				<outline text="inputAddress.addEventListener (&quot;blur&quot;, function () {">
 					<outline text="setTimeout (hideTypeahead, 150); //after a mousedown on a row has had its turn"/>
@@ -7512,6 +7757,17 @@
 							</outline>
 						<outline text="case &quot;openUrlInNewTab&quot;: //from the right-click menu on a link">
 							<outline text="openUrlInNewTab (theParam, true);"/>
+							<outline text="break;"/>
+							</outline>
+						<outline text="case &quot;openFile&quot;: //11/27/26 by CC -- Open local file... in the File menu: in this tab when it&apos;s empty, otherwise in a new one, in front">
+							<outline text="if (currentTab ().url === undefined) {">
+								<outline text="loadUrl (currentTab (), theParam);"/>
+								<outline text="}"/>
+								</outline>
+							<outline text="else {">
+								<outline text="openUrlInNewTab (theParam, false);"/>
+								<outline text="}"/>
+								</outline>
 							<outline text="break;"/>
 							</outline>
 						<outline text="}"/>
