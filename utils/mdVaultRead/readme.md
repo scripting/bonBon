@@ -50,3 +50,7 @@ It's a Node app. `npm install`, then run `mdvaultread.js` with the port in the `
 `config.json` has two settings: `urlDefaultVault`, the vault shown when the address doesn't name one, and `cacheMinutes`, how long a vault's list of files is remembered.
 
 It's the sibling of [mdFeedRead](https://github.com/scripting/bonBon/tree/main/utils/mdFeedRead), which does this for RSS feeds.
+
+## Questions and comments
+
+Dave wrote about mdVaultRead in an issue on the BonBon repo: [Pieces joined: Obsidian vaults and BonBon](https://github.com/scripting/bonBon/issues/28). That's the place for questions and comments.
