@@ -1,14 +1,14 @@
 #### 11/28/26; 10:07:31 AM by DW -- v0.6.58
 
-<i>Open local file</i> command in File menu. 
+* New command in File menu -- <i>Open local file.</i> I have lots of Markdown files lying around never had an easy way to read them.
 
-Workaround a GitHub historic feature. When we ask for a Markdown file it sends back an HTML file. We are probably the only app that wants the Markdown version. We watch for this specific situation and correct the mistake. 
+* Workaround a GitHub historic feature. When we ask for a Markdown file it sends back an HTML file. We are probably the only app that wants the Markdown version. We watch for this specific situation and correct the mistake. 
 
-A bon:// address typed into the address bar now works. 
+* A bon:// address typed or pasted into the address bar now works. 
 
 * Try: `bon://scripting.com/code/mymarkdown/index.md`
 
-Right-click in address bar shows a menu with Cut, Copy, Paste and go, Select All.
+* Right-click in address bar shows a menu with Cut, Copy, Paste and go, Select All.
 
 #### 11/22/26; 10:46:55 AM by DW
 
